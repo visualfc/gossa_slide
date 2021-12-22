@@ -1,0 +1,401 @@
+# Go+ SSA 脚本引擎简介
+
+七叶
+2021.12.22
+vfc@goplus.org
+
+## 主题
+
+* gossa 项目简介
+* gossa 使用示例
+* gossa 实现原理
+* gossa 存在问题
+
+## 一、gossa 简介
+
+gossa 是一个基于 SSA 实现的 Go 语言解释器，可以直接从 Go/Go+ 源码运行程序。
+* 项目地址
+
+.link https://github.com/goplus/gossa
+
+* 项目文档
+
+.link https://pkg.go.dev/github.com/goplus/gossa
+
+* 代码示例
+
+.link https://github.com/visualfc/gossa_demo
+
+* 项目应用：使用 gossa 实现的 Go+ Playground
+
+.link https://jsplay.goplus.org
+.link ./jsplay.html
+
+## 为什么要开发 gossa
+
+* 为什么要自己开发 gossa 项目，而不是使用现有的如 yaegi 项目。
+
+.link https://github.com/traefik/yaegi
+
+* Go runtime 内存布局兼容性
+
+  func / var / const / struct / interface / methods
+
+## Go 版本 interface
+
+`go run main.go`
+
+.play -edit demo/hello_iface_go.go /^package/,
+
+T 实现了 fmt.Stringer 接口
+
+## yaegi 版本
+
+`yaegi run main.go`
+
+.play -edit demo/hello_iface_yaegi.go /^package/,
+
+yaegi 中 T 不兼容 fmt.Stringer 接口，打印原始值。
+
+## gossa 版本
+
+`gossa run main.go`
+
+.play -edit demo/hello_iface_ssa.go /^package/,
+
+gossa 中 T 兼容 fmt.Stringer 接口，正确输出。
+
+## gossa 主要功能
+
+* 支持 Go 语言规范 <https://go.dev/ref/spec>
+
+* 内建支持 Go+ 源码运行
+
+* 与 Go runtime 保持内存布局兼容
+
+  func / var / const / struct / interface / methods
+
+* 无依赖执行
+
+  编译后不需要 Go 平台支持，独立运行和执行 Go/Go+ 源码。
+
+* 自定义导入包
+
+  根据需要自定义允许使用的导入包，标准库可剪裁。提供 qexp 工具，方便自动生成需要的导入包。
+
+* 多平台支持
+
+  Native 平台 Go1.16/Go1.17 (amd64 下需要设置 GOEXPERIMENT=noregabi)
+  WASM/GopherJS 平台支持
+
+## gossa 使用限制
+
+* 目前只支持单个 package 的读取和运行。
+
+* 只允许 gossa/interp 单个实例运行。
+
+* 不支持 ASM，CGO，go:linkname symbol。
+
+* Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。
+
+  GOEXPERIMENT=noregabi go build demo
+
+* Go1.18 amd64 默认使用 regabi 目前无法运行。
+
+* typed methods 数量限制，预分配 256 个。
+
+  import _ "github.com/reflectx/icall/icall10" // 2^n (10~16)
+
+  使用 reflectx/cmd/icall_gen 生成需要的 methods
+
+* GopherJS 支持 ( go 1.12 ~ go1.16 )
+
+.link https://github.com/goplusjs/gopherjs 
+
+## 二、gossa 使用示例
+
+* Go 版 Hello World
+
+`go run main.go`
+
+.play -edit demo/hello_go.go /^package/,
+
+* Go+ 版 Hello World
+
+`gop run main.go`
+
+.play -edit demo/hello_gop.go /^println/,
+
+## go run 运行过程
+
+`go run -x main.go`
+
+.play -edit demo/hello_x.go /^package/,
+
+## gossa 版 Hello World
+
+* 运行 Go 源码
+
+`gossa run main.go`
+
+.play -edit demo/hello_go_ssa.go /^package/,
+
+* 运行 Go+ 源码
+
+`gossa run main.gop`
+
+.play -edit demo/hello_gop_ssa.go /^println/,
+
+
+
+## gossa 组件
+
+* gossa package
+
+  github.com/goplus/gossa
+
+* Go+ 编译支持
+
+  github.com/goplus/gossa/gopbuild
+
+* gossa 导入包
+
+  github.com/goplus/gossa/pkg/...
+
+* gossa 命令程序，测试用
+
+  github.com/goplus/gossa/cmd/gossa
+
+* gossa 导入库生成工具
+
+  github.com/goplus/gossa/cmd/qexp
+
+## gossa 使用示例
+
+* 自定义应用
+ 
+通常情况不会直接使用 cmd/gossa ，而是基于 `github.com/goplus/gossa` 做自定义应用程序。
+
+* 自定义导入包
+
+```
+import (
+	"github.com/goplus/gossa"
+	_ "github.com/goplus/gossa/pkg/fmt"
+	_ "github.com/goplus/gossa/pkg/io"
+	_ "github.com/goplus/gossa/pkg/os"
+	。。。
+)
+```
+
+## gossa demo1
+
+* 运行 Go 版本 Hello World
+
+.play -edit gossa_demo/hello_go/main.go
+
+## gossa demo2
+
+* 运行 Go+ 版本 Hello World
+
+.play -edit gossa_demo/hello_gop/main.go
+
+## gossa demo3
+
+* 运行 interface 版本 Hello World ( 实现 Go runtime 兼容)
+
+.play -edit gossa_demo/hello_interface/main.go
+
+```
+type Stringer interface { String() string }
+```
+
+## gossa demo4
+
+* 实现 Go runtime 兼容, main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。
+
+.play -edit gossa_demo/hello_interface2/main.go
+
+## gossa demo5
+
+* Go 程序退出状态值 exit status code
+
+.play -edit gossa_demo/exit_go/main.go
+
+## gossa demo6
+
+* Go+ 程序退出状态值 exit status code
+
+.play -edit gossa_demo/exit_gop/main.go
+
+## gossa demo7
+
+* Go panic 处理
+
+.play -edit gossa_demo/panic_go/main.go
+
+## gossa demo8
+
+* Go+ panic 处理
+
+.play -edit gossa_demo/panic_gop/main.go
+
+## github.com/goplus/gossa 底层控制
+
+* gossa.Context 环境控制
+
+* gossa.Interp 执行引擎 
+
+## gossa demo9
+
+* 文件加载
+
+.play -edit gossa_demo/ctx_loadfile/main.go
+
+## gossa demo10
+
+* AST 加载
+
+.play -edit gossa_demo/ctx_loadast/main.go
+
+## gossa demo11
+
+* Interp 执行引擎
+
+.play -edit gossa_demo/ctx_interp/main.go
+
+## gossa demo12
+
+* 函数调用
+
+.play -edit gossa_demo/ctx_func_base/main.go
+
+## gossa demo13
+
+* 可变参数函数调用
+
+.play -edit gossa_demo/ctx_func_variadic/main.go
+
+## gossa demo14
+
+* 多返回值处理
+
+.play -edit gossa_demo/ctx_func_tuple/main.go
+
+## Interp 函数
+
+* Run/RunFunc 函数带有错误处理功能。
+
+* GetFunc    函数
+* GetVarAddr 变量地址
+* GetConst   常量
+* GetType    类型
+
+## gossa demo15
+
+* 获取函数
+
+.play -edit gossa_demo/ctx_get_func/main.go
+
+
+## gossa demo16
+
+* 获取变量地址
+
+.play -edit gossa_demo/ctx_get_var/main.go
+
+
+## gossa demo17
+
+* 获取常量值
+
+.play -edit gossa_demo/ctx_get_const/main.go
+
+
+## gossa demo18
+
+* 获取类型
+
+.play -edit gossa_demo/ctx_get_type/main.go
+
+## gossa 实践
+
+* 写一个 ispx 程序运行 github.com/goplus/spx 应用
+
+.code -numbers ispx/main.go
+
+.link https://github.com/visualfc/ispx
+
+
+## gossa 实现原理
+
+
+* Golang SSA package
+
+Package ssa defines a representation of the elements of Go programs (packages, types, functions, variables and constants) using a static single-assignment (SSA) form intermediate representation (IR) for the bodies of functions.
+
+.link https://pkg.go.dev/golang.org/x/tools/go/ssa
+
+* reflectx package ( Go runtime 兼容)
+
+.link https://github.com/goplus/reflectx
+
+* reflectx package for GopherJS
+
+.link https://github.com/goplusjs/reflectx
+
+## gossa 存在问题
+
+* Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。
+
+  GOEXPERIMENT=noregabi go build demo
+
+* Go1.18 amd64 默认使用 regabi 目前无法运行。
+
+  使用 ASM 编写 regabi 兼容 method provider
+
+* typed methods 数量限制，预分配 256 个。
+
+  import _ "github.com/reflectx/icall/icall10" // 2^n (10~16)
+
+  使用 reflectx/cmd/icall_gen 生成需要的 methods
+
+## Go+ Playground
+
+.link https://go.dev/play
+
+.link https://play.goplus.org
+
+.link https://jsplay.goplus.org
+
+## jsplay.goplus.org 实现
+
+源码
+
+.link https://github.com/goplusjs/play
+
+```
+
+   
+module github.com/goplusjs/play
+
+go 1.16
+
+require (
+	github.com/goplus/gop v1.0.33
+	github.com/goplus/gossa v0.2.6
+	github.com/goplus/gox v1.8.1
+	github.com/goplus/reflectx v0.6.8
+	github.com/goplusjs/gopherjs v1.2.5
+	golang.org/x/tools v0.1.8
+)
+
+replace github.com/goplus/reflectx => github.com/goplusjs/reflectx v0.5.6
+```
+
+## jsplay.goplus.org 引用库
+.link https://github.com/goplus/gop
+.link https://github.com/goplus/gossa
+.link https://github.com/goplus/reflectx
+.link https://github.com/goplusjs/reflectx
+.link https://github.com/goplusjs/gopherjs

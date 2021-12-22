@@ -1,0 +1,1532 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Go&#43; SSA 脚本引擎简介</title>
+    <meta charset='utf-8'>
+    <script src='static/slides.js'></script>
+  </head>
+
+  <body style='display: none'>
+
+    <section class='slides layout-widescreen'>
+      
+      <article>
+        <h1>Go&#43; SSA 脚本引擎简介</h1>
+        
+        
+        
+          <div class="presenter">
+            
+  
+  <p>
+    七叶
+  </p>
+  
+
+  
+  <p>
+    2021.12.22
+  </p>
+  
+
+          </div>
+        
+      </article>
+      
+  
+  
+      <article>
+      
+        <h3>主题</h3>
+        <ul>
+<li>gossa 项目简介</li>
+<li>gossa 使用示例</li>
+<li>gossa 实现原理</li>
+<li>gossa 存在问题</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>一、gossa 简介</h3>
+        <p>gossa 是一个基于 SSA 实现的 Go 语言解释器，可以直接从 Go/Go+ 源码运行程序。</p>
+<ul>
+<li>项目地址</li>
+</ul>
+<p class="link"><a href="https://github.com/goplus/gossa" target="_blank">github.com/goplus/gossa</a></p><ul>
+<li>项目文档</li>
+</ul>
+<p class="link"><a href="https://pkg.go.dev/github.com/goplus/gossa" target="_blank">pkg.go.dev/github.com/goplus/gossa</a></p><ul>
+<li>代码示例</li>
+</ul>
+<p class="link"><a href="https://github.com/visualfc/gossa_demo" target="_blank">github.com/visualfc/gossa_demo</a></p><ul>
+<li>项目应用：使用 gossa 实现的 Go+ Playground</li>
+</ul>
+<p class="link"><a href="https://jsplay.goplus.org" target="_blank">jsplay.goplus.org</a></p><p class="link"><a href="./jsplay.html" target="_blank">./jsplay.html</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>为什么要开发 gossa</h3>
+        <ul>
+<li>为什么要自己开发 gossa 项目，而不是使用现有的如 yaegi 项目。</li>
+</ul>
+<p class="link"><a href="https://github.com/traefik/yaegi" target="_blank">github.com/traefik/yaegi</a></p><ul>
+<li>
+<p>Go runtime 内存布局兼容性</p>
+<p>func / var / const / struct / interface / methods</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>Go 版本 interface</h3>
+        <p><code>go run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">type T struct {</span>
+<span num="7">    n int</span>
+<span num="8">}</span>
+<span num="9"></span>
+<span num="10">func (t *T) String() string {</span>
+<span num="11">    return fmt.Sprintf(&#34;T:%v&#34;, t.n)</span>
+<span num="12">}</span>
+<span num="13">func main() {</span>
+<span num="14">    fmt.Println(&#34;Hello World&#34;, &amp;T{100})</span>
+<span num="15">}</span>
+</pre>
+</div>
+<p>T 实现了 fmt.Stringer 接口</p>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>yaegi 版本</h3>
+        <p><code>yaegi run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">type T struct {</span>
+<span num="7">    n int</span>
+<span num="8">}</span>
+<span num="9"></span>
+<span num="10">func (t *T) String() string {</span>
+<span num="11">    return fmt.Sprintf(&#34;T:%v&#34;, t.n)</span>
+<span num="12">}</span>
+<span num="13">func main() {</span>
+<span num="14">    fmt.Println(&#34;Hello World&#34;, &amp;T{100})</span>
+<span num="15">}</span>
+</pre>
+</div>
+<p>yaegi 中 T 不兼容 fmt.Stringer 接口，打印原始值。</p>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 版本</h3>
+        <p><code>gossa run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">type T struct {</span>
+<span num="7">    n int</span>
+<span num="8">}</span>
+<span num="9"></span>
+<span num="10">func (t *T) String() string {</span>
+<span num="11">    return fmt.Sprintf(&#34;T:%v&#34;, t.n)</span>
+<span num="12">}</span>
+<span num="13">func main() {</span>
+<span num="14">    fmt.Println(&#34;Hello World&#34;, &amp;T{100})</span>
+<span num="15">}</span>
+</pre>
+</div>
+<p>gossa 中 T 兼容 fmt.Stringer 接口，正确输出。</p>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 主要功能</h3>
+        <ul>
+<li>
+<p>支持 Go 语言规范 <a href="https://go.dev/ref/spec">https://go.dev/ref/spec</a></p>
+</li>
+<li>
+<p>内建支持 Go+ 源码运行</p>
+</li>
+<li>
+<p>与 Go runtime 保持内存布局兼容</p>
+<p>func / var / const / struct / interface / methods</p>
+</li>
+<li>
+<p>无依赖执行</p>
+<p>编译后不需要 Go 平台支持，独立运行和执行 Go/Go+ 源码。</p>
+</li>
+<li>
+<p>自定义导入包</p>
+<p>根据需要自定义允许使用的导入包，标准库可剪裁。提供 qexp 工具，方便自动生成需要的导入包。</p>
+</li>
+<li>
+<p>多平台支持</p>
+<p>Native 平台 Go1.16/Go1.17 (amd64 下需要设置 GOEXPERIMENT=noregabi)
+WASM/GopherJS 平台支持</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 使用限制</h3>
+        <ul>
+<li>
+<p>目前只支持单个 package 的读取和运行。</p>
+</li>
+<li>
+<p>只允许 gossa/interp 单个实例运行。</p>
+</li>
+<li>
+<p>不支持 ASM，CGO，go:linkname symbol。</p>
+</li>
+<li>
+<p>Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。</p>
+<p>GOEXPERIMENT=noregabi go build demo</p>
+</li>
+<li>
+<p>Go1.18 amd64 默认使用 regabi 目前无法运行。</p>
+</li>
+<li>
+<p>typed methods 数量限制，预分配 256 个。</p>
+<p>import _ &quot;github.com/reflectx/icall/icall10&quot; // 2^n (10~16)</p>
+<p>使用 reflectx/cmd/icall_gen 生成需要的 methods</p>
+</li>
+<li>
+<p>GopherJS 支持 ( go 1.12 ~ go1.16 )</p>
+</li>
+</ul>
+<p class="link"><a href="https://github.com/goplusjs/gopherjs" target="_blank">github.com/goplusjs/gopherjs</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>二、gossa 使用示例</h3>
+        <ul>
+<li>Go 版 Hello World</li>
+</ul>
+<p><code>go run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">func main() {</span>
+<span num="7">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="8">}</span>
+</pre>
+</div>
+<ul>
+<li>Go+ 版 Hello World</li>
+</ul>
+<p><code>gop run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">println &#34;Hello, World&#34;</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>go run 运行过程</h3>
+        <p><code>go run -x main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">func main() {</span>
+<span num="7">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="8">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 版 Hello World</h3>
+        <ul>
+<li>运行 Go 源码</li>
+</ul>
+<p><code>gossa run main.go</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">package main</span>
+<span num="3"></span>
+<span num="4">import &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">func main() {</span>
+<span num="7">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="8">}</span>
+</pre>
+</div>
+<ul>
+<li>运行 Go+ 源码</li>
+</ul>
+<p><code>gossa run main.gop</code></p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="2">println &#34;Hello, World&#34;</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 组件</h3>
+        <ul>
+<li>
+<p>gossa package</p>
+<p>github.com/goplus/gossa</p>
+</li>
+<li>
+<p>Go+ 编译支持</p>
+<p>github.com/goplus/gossa/gopbuild</p>
+</li>
+<li>
+<p>gossa 导入包</p>
+<p>github.com/goplus/gossa/pkg/...</p>
+</li>
+<li>
+<p>gossa 命令程序，测试用</p>
+<p>github.com/goplus/gossa/cmd/gossa</p>
+</li>
+<li>
+<p>gossa 导入库生成工具</p>
+<p>github.com/goplus/gossa/cmd/qexp</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 使用示例</h3>
+        <ul>
+<li>自定义应用</li>
+</ul>
+<p>通常情况不会直接使用 cmd/gossa ，而是基于 <code>github.com/goplus/gossa</code> 做自定义应用程序。</p>
+<ul>
+<li>自定义导入包</li>
+</ul>
+<pre><code>import (
+    &quot;github.com/goplus/gossa&quot;
+    _ &quot;github.com/goplus/gossa/pkg/fmt&quot;
+    _ &quot;github.com/goplus/gossa/pkg/io&quot;
+    _ &quot;github.com/goplus/gossa/pkg/os&quot;
+    。。。
+)
+</code></pre>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo1</h3>
+        <ul>
+<li>运行 Go 版本 Hello World</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="5">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="6">)</span>
+<span num="7"></span>
+<span num="8">var source = `</span>
+<span num="9">package main</span>
+<span num="10"></span>
+<span num="11">import &#34;fmt&#34;</span>
+<span num="12"></span>
+<span num="13">func main() {</span>
+<span num="14">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="15">}</span>
+<span num="16">`</span>
+<span num="17"></span>
+<span num="18">func main() {</span>
+<span num="19">    _, err := gossa.RunFile(&#34;main.go&#34;, source, nil, 0)</span>
+<span num="20">    if err != nil {</span>
+<span num="21">        panic(err)</span>
+<span num="22">    }</span>
+<span num="23">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo2</h3>
+        <ul>
+<li>运行 Go+ 版本 Hello World</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="5">    _ &#34;github.com/goplus/gossa/gopbuild&#34;</span>
+<span num="6">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="7">)</span>
+<span num="8"></span>
+<span num="9">var source = `</span>
+<span num="10">println &#34;Hello, World&#34;</span>
+<span num="11">`</span>
+<span num="12"></span>
+<span num="13">func main() {</span>
+<span num="14">    _, err := gossa.RunFile(&#34;main.gop&#34;, source, nil, 0)</span>
+<span num="15">    if err != nil {</span>
+<span num="16">        panic(err)</span>
+<span num="17">    }</span>
+<span num="18">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo3</h3>
+        <ul>
+<li>运行 interface 版本 Hello World ( 实现 Go runtime 兼容)</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="5">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="6">)</span>
+<span num="7"></span>
+<span num="8">var source = `</span>
+<span num="9">package main</span>
+<span num="10"></span>
+<span num="11">import &#34;fmt&#34;</span>
+<span num="12"></span>
+<span num="13">type T struct {}</span>
+<span num="14"></span>
+<span num="15">func (t T) String() string {</span>
+<span num="16">    return &#34;Hello, World&#34; </span>
+<span num="17">}</span>
+<span num="18"></span>
+<span num="19">func main() {</span>
+<span num="20">    fmt.Println(&amp;T{})</span>
+<span num="21">}</span>
+<span num="22">`</span>
+<span num="23"></span>
+<span num="24">func main() {</span>
+<span num="25">    _, err := gossa.RunFile(&#34;main.go&#34;, source, nil, 0)</span>
+<span num="26">    if err != nil {</span>
+<span num="27">        panic(err)</span>
+<span num="28">    }</span>
+<span num="29">}</span>
+</pre>
+</div>
+<pre><code>type Stringer interface { String() string }
+</code></pre>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo4</h3>
+        <ul>
+<li>实现 Go runtime 兼容, main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="5">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="6">)</span>
+<span num="7"></span>
+<span num="8">var source = `</span>
+<span num="9">package main</span>
+<span num="10"></span>
+<span num="11">import &#34;fmt&#34;</span>
+<span num="12"></span>
+<span num="13">type M struct { N int}</span>
+<span num="14">type T struct { N int}</span>
+<span num="15">func (t T) String() string {</span>
+<span num="16">    return &#34;T:String&#34; </span>
+<span num="17">}</span>
+<span num="18">type U struct {</span>
+<span num="19">    T</span>
+<span num="20">}</span>
+<span num="21">func (u U) GoString() string {</span>
+<span num="22">    return &#34;U:GoString&#34;</span>
+<span num="23">}</span>
+<span num="24"></span>
+<span num="25">func main() {</span>
+<span num="26">    m := &amp;M{100}</span>
+<span num="27">    t := &amp;T{100}</span>
+<span num="28">    u := &amp;U{T{100}}</span>
+<span num="29">    fmt.Printf(&#34;%v %#v\n&#34;,m,m)</span>
+<span num="30">    fmt.Printf(&#34;%v %#v\n&#34;,t,t)</span>
+<span num="31">    fmt.Printf(&#34;%v %#v\n&#34;,u,u)</span>
+<span num="32">}</span>
+<span num="33">`</span>
+<span num="34"></span>
+<span num="35">func main() {</span>
+<span num="36">    _, err := gossa.RunFile(&#34;main.go&#34;, source, nil, 0)</span>
+<span num="37">    if err != nil {</span>
+<span num="38">        panic(err)</span>
+<span num="39">    }</span>
+<span num="40">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo5</h3>
+        <ul>
+<li>Go 程序退出状态值 exit status code</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="7">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="8">    _ &#34;github.com/goplus/gossa/pkg/os&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">var source = `</span>
+<span num="12">package main</span>
+<span num="13"></span>
+<span num="14">import (</span>
+<span num="15">    &#34;fmt&#34;</span>
+<span num="16">    &#34;os&#34;</span>
+<span num="17">)</span>
+<span num="18"></span>
+<span num="19">func main() {</span>
+<span num="20">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="21">    os.Exit(2)</span>
+<span num="22">}</span>
+<span num="23">`</span>
+<span num="24"></span>
+<span num="25">func main() {</span>
+<span num="26">    code, err := gossa.RunFile(&#34;main.go&#34;, source, nil, 0)</span>
+<span num="27">    if err != nil {</span>
+<span num="28">        panic(err)</span>
+<span num="29">    }</span>
+<span num="30">    fmt.Println(&#34;exit&#34;, code)</span>
+<span num="31">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo6</h3>
+        <ul>
+<li>Go+ 程序退出状态值 exit status code</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="7">    _ &#34;github.com/goplus/gossa/gopbuild&#34;</span>
+<span num="8">    _ &#34;github.com/goplus/gossa/pkg/os&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">var source = `</span>
+<span num="12">import &#34;os&#34;</span>
+<span num="13">println &#34;Hello, World&#34;</span>
+<span num="14">os.exit(2)</span>
+<span num="15">`</span>
+<span num="16"></span>
+<span num="17">func main() {</span>
+<span num="18">    code, err := gossa.RunFile(&#34;main.gop&#34;, source, nil, 0)</span>
+<span num="19">    if err != nil {</span>
+<span num="20">        panic(err)</span>
+<span num="21">    }</span>
+<span num="22">    fmt.Println(&#34;exit code&#34;, code)</span>
+<span num="23">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo7</h3>
+        <ul>
+<li>Go panic 处理</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="7">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="8">)</span>
+<span num="9"></span>
+<span num="10">var source = `</span>
+<span num="11">package main</span>
+<span num="12"></span>
+<span num="13">import &#34;fmt&#34;</span>
+<span num="14"></span>
+<span num="15">func main() {</span>
+<span num="16">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="17">    panic(&#34;error&#34;)</span>
+<span num="18">}</span>
+<span num="19">`</span>
+<span num="20"></span>
+<span num="21">func main() {</span>
+<span num="22">    _, err := gossa.RunFile(&#34;main.go&#34;, source, nil, 0)</span>
+<span num="23">    if err != nil {</span>
+<span num="24">        fmt.Println(&#34;PANIC:&#34;, err)</span>
+<span num="25">    }</span>
+<span num="26">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo8</h3>
+        <ul>
+<li>Go+ panic 处理</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5"></span>
+<span num="6">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="7">    _ &#34;github.com/goplus/gossa/gopbuild&#34;</span>
+<span num="8">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">var source = `</span>
+<span num="12">var i int</span>
+<span num="13">println 100/i</span>
+<span num="14">`</span>
+<span num="15"></span>
+<span num="16">func main() {</span>
+<span num="17">    _, err := gossa.RunFile(&#34;main.gop&#34;, source, nil, 0)</span>
+<span num="18">    if err != nil {</span>
+<span num="19">        fmt.Println(&#34;PANIC:&#34;, err)</span>
+<span num="20">    }</span>
+<span num="21">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>github.com/goplus/gossa 底层控制</h3>
+        <ul>
+<li>
+<p>gossa.Context 环境控制</p>
+</li>
+<li>
+<p>gossa.Interp 执行引擎</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo9</h3>
+        <ul>
+<li>文件加载</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;go/token&#34;</span>
+<span num="5">    &#34;log&#34;</span>
+<span num="6"></span>
+<span num="7">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="8">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">var source = `</span>
+<span num="12">package main</span>
+<span num="13"></span>
+<span num="14">import &#34;fmt&#34;</span>
+<span num="15"></span>
+<span num="16">func main() {</span>
+<span num="17">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="18">}</span>
+<span num="19">`</span>
+<span num="20"></span>
+<span num="21">func main() {</span>
+<span num="22">    fset := token.NewFileSet()</span>
+<span num="23">    ctx := gossa.NewContext(0)</span>
+<span num="24">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="25">    if err != nil {</span>
+<span num="26">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="27">    }</span>
+<span num="28">    _, err = ctx.RunPkg(pkg, &#34;main.go&#34;, nil)</span>
+<span num="29">    if err != nil {</span>
+<span num="30">        log.Panicln(&#34;run&#34;, err)</span>
+<span num="31">    }</span>
+<span num="32">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo10</h3>
+        <ul>
+<li>AST 加载</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;go/parser&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package main</span>
+<span num="14"></span>
+<span num="15">import &#34;fmt&#34;</span>
+<span num="16"></span>
+<span num="17">func main() {</span>
+<span num="18">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="19">}</span>
+<span num="20">`</span>
+<span num="21"></span>
+<span num="22">func main() {</span>
+<span num="23">    fset := token.NewFileSet()</span>
+<span num="24">    f, err := parser.ParseFile(fset, &#34;main.go&#34;, source, parser.ParseComments)</span>
+<span num="25">    if err != nil {</span>
+<span num="26">        log.Panicln(&#34;parse&#34;, err)</span>
+<span num="27">    }</span>
+<span num="28">    ctx := gossa.NewContext(0)</span>
+<span num="29">    pkg, err := ctx.LoadAstFile(fset, f)</span>
+<span num="30">    if err != nil {</span>
+<span num="31">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="32">    }</span>
+<span num="33">    _, err = ctx.RunPkg(pkg, &#34;main.go&#34;, nil)</span>
+<span num="34">    if err != nil {</span>
+<span num="35">        log.Panicln(&#34;run&#34;, err)</span>
+<span num="36">    }</span>
+<span num="37">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo11</h3>
+        <ul>
+<li>Interp 执行引擎</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;go/token&#34;</span>
+<span num="5">    &#34;log&#34;</span>
+<span num="6"></span>
+<span num="7">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="8">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="9">)</span>
+<span num="10"></span>
+<span num="11">var source = `</span>
+<span num="12">package main</span>
+<span num="13"></span>
+<span num="14">import &#34;fmt&#34;</span>
+<span num="15"></span>
+<span num="16">func main() {</span>
+<span num="17">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="18">}</span>
+<span num="19">`</span>
+<span num="20"></span>
+<span num="21">func main() {</span>
+<span num="22">    fset := token.NewFileSet()</span>
+<span num="23">    ctx := gossa.NewContext(0)</span>
+<span num="24">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="25">    if err != nil {</span>
+<span num="26">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="27">    }</span>
+<span num="28">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="29">    if err != nil {</span>
+<span num="30">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="31">    }</span>
+<span num="32">    _, err = interp.Run(&#34;main&#34;)</span>
+<span num="33">    if err != nil {</span>
+<span num="34">        log.Panicln(&#34;run&#34;, err)</span>
+<span num="35">    }</span>
+<span num="36">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo12</h3>
+        <ul>
+<li>函数调用</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package main</span>
+<span num="14"></span>
+<span num="15">import &#34;fmt&#34;</span>
+<span num="16"></span>
+<span num="17">func main() {</span>
+<span num="18">    fmt.Println(&#34;Hello, World&#34;)</span>
+<span num="19">}</span>
+<span num="20"></span>
+<span num="21">func add(i, j int) int {</span>
+<span num="22">    return i&#43;j</span>
+<span num="23">}</span>
+<span num="24">`</span>
+<span num="25"></span>
+<span num="26">func main() {</span>
+<span num="27">    fset := token.NewFileSet()</span>
+<span num="28">    ctx := gossa.NewContext(0)</span>
+<span num="29">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="30">    if err != nil {</span>
+<span num="31">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="32">    }</span>
+<span num="33">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="34">    if err != nil {</span>
+<span num="35">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="36">    }</span>
+<span num="37">    v, err := interp.RunFunc(&#34;add&#34;, 100, 200)</span>
+<span num="38">    fmt.Println(v, err)</span>
+<span num="39">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo13</h3>
+        <ul>
+<li>可变参数函数调用</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package bar</span>
+<span num="14"></span>
+<span num="15">func sum(n ...int) (r int) {</span>
+<span num="16">    for _, v := range n {</span>
+<span num="17">        r &#43;= v</span>
+<span num="18">    }</span>
+<span num="19">    return</span>
+<span num="20">}</span>
+<span num="21">`</span>
+<span num="22"></span>
+<span num="23">func main() {</span>
+<span num="24">    fset := token.NewFileSet()</span>
+<span num="25">    ctx := gossa.NewContext(0)</span>
+<span num="26">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="27">    if err != nil {</span>
+<span num="28">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="29">    }</span>
+<span num="30">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="31">    if err != nil {</span>
+<span num="32">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="33">    }</span>
+<span num="34">    v1, err := interp.RunFunc(&#34;sum&#34;, []int{100, 200})</span>
+<span num="35">    fmt.Println(v1, err)</span>
+<span num="36">    v2, err := interp.RunFunc(&#34;sum&#34;, []int{})</span>
+<span num="37">    fmt.Println(v2, err)</span>
+<span num="38">    // error call</span>
+<span num="39">    v3, err := interp.RunFunc(&#34;sum&#34;)</span>
+<span num="40">    fmt.Println(v3, err)</span>
+<span num="41">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo14</h3>
+        <ul>
+<li>多返回值处理</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package bar</span>
+<span num="14"></span>
+<span num="15">func call(i, j int) (int,int) {</span>
+<span num="16">    return i&#43;j, i*j</span>
+<span num="17">}</span>
+<span num="18">`</span>
+<span num="19"></span>
+<span num="20">func main() {</span>
+<span num="21">    fset := token.NewFileSet()</span>
+<span num="22">    ctx := gossa.NewContext(0)</span>
+<span num="23">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="24">    if err != nil {</span>
+<span num="25">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="26">    }</span>
+<span num="27">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="28">    if err != nil {</span>
+<span num="29">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="30">    }</span>
+<span num="31">    v, err := interp.RunFunc(&#34;call&#34;, 100, 200)</span>
+<span num="32">    fmt.Println(v, err)</span>
+<span num="33">    if t, ok := v.(gossa.Tuple); ok {</span>
+<span num="34">        fmt.Println(len(t), t[0], t[1])</span>
+<span num="35">    }</span>
+<span num="36">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>Interp 函数</h3>
+        <ul>
+<li>
+<p>Run/RunFunc 函数带有错误处理功能。</p>
+</li>
+<li>
+<p>GetFunc    函数</p>
+</li>
+<li>
+<p>GetVarAddr 变量地址</p>
+</li>
+<li>
+<p>GetConst   常量</p>
+</li>
+<li>
+<p>GetType    类型</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo15</h3>
+        <ul>
+<li>获取函数</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package bar</span>
+<span num="14"></span>
+<span num="15">func add(i, j int) int {</span>
+<span num="16">    return i&#43;j</span>
+<span num="17">}</span>
+<span num="18">`</span>
+<span num="19"></span>
+<span num="20">func main() {</span>
+<span num="21">    fset := token.NewFileSet()</span>
+<span num="22">    ctx := gossa.NewContext(0)</span>
+<span num="23">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="24">    if err != nil {</span>
+<span num="25">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="26">    }</span>
+<span num="27">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="28">    if err != nil {</span>
+<span num="29">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="30">    }</span>
+<span num="31">    if v, ok := interp.GetFunc(&#34;add&#34;); ok {</span>
+<span num="32">        if fn, ok := v.(func(int, int) int); ok {</span>
+<span num="33">            r := fn(100, 200)</span>
+<span num="34">            fmt.Println(r)</span>
+<span num="35">        }</span>
+<span num="36">    }</span>
+<span num="37">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo16</h3>
+        <ul>
+<li>获取变量地址</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">)</span>
+<span num="11"></span>
+<span num="12">var source = `</span>
+<span num="13">package bar</span>
+<span num="14"></span>
+<span num="15">var index int = 100</span>
+<span num="16">var pindex *int = &amp;index</span>
+<span num="17"></span>
+<span num="18">func show() {</span>
+<span num="19">    println(index)</span>
+<span num="20">}</span>
+<span num="21">`</span>
+<span num="22"></span>
+<span num="23">func main() {</span>
+<span num="24">    fset := token.NewFileSet()</span>
+<span num="25">    ctx := gossa.NewContext(0)</span>
+<span num="26">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="27">    if err != nil {</span>
+<span num="28">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="29">    }</span>
+<span num="30">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="31">    if err != nil {</span>
+<span num="32">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="33">    }</span>
+<span num="34">    if v, ok := interp.GetVarAddr(&#34;index&#34;); ok {</span>
+<span num="35">        if p, ok := v.(*int); ok {</span>
+<span num="36">            fmt.Println(*p)</span>
+<span num="37">            *p = 200</span>
+<span num="38">        }</span>
+<span num="39">    }</span>
+<span num="40">    if v, ok := interp.GetVarAddr(&#34;pindex&#34;); ok {</span>
+<span num="41">        if p, ok := v.(**int); ok {</span>
+<span num="42">            fmt.Println(**p)</span>
+<span num="43">            **p = 300</span>
+<span num="44">        }</span>
+<span num="45">    }</span>
+<span num="46">    if fn, ok := interp.GetFunc(&#34;show&#34;); ok {</span>
+<span num="47">        fn.(func())()</span>
+<span num="48">    }</span>
+<span num="49">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo17</h3>
+        <ul>
+<li>获取常量值</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="9">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="10">    _ &#34;github.com/goplus/gossa/pkg/math&#34;</span>
+<span num="11">)</span>
+<span num="12"></span>
+<span num="13">var source = `</span>
+<span num="14">package bar</span>
+<span num="15"></span>
+<span num="16">import &#34;math&#34;</span>
+<span num="17"></span>
+<span num="18">const Pi = math.Pi</span>
+<span num="19"></span>
+<span num="20">func add(i, j int) int {</span>
+<span num="21">    return i&#43;j</span>
+<span num="22">}</span>
+<span num="23">`</span>
+<span num="24"></span>
+<span num="25">func main() {</span>
+<span num="26">    fset := token.NewFileSet()</span>
+<span num="27">    ctx := gossa.NewContext(0)</span>
+<span num="28">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="29">    if err != nil {</span>
+<span num="30">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="31">    }</span>
+<span num="32">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="33">    if err != nil {</span>
+<span num="34">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="35">    }</span>
+<span num="36">    if v, ok := interp.GetConst(&#34;Pi&#34;); ok {</span>
+<span num="37">        fmt.Println(v)</span>
+<span num="38">        fmt.Println(v.ExactString())</span>
+<span num="39">    }</span>
+<span num="40">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa demo18</h3>
+        <ul>
+<li>获取类型</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre contenteditable="true" spellcheck="false"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">import (</span>
+<span num="4">    &#34;fmt&#34;</span>
+<span num="5">    &#34;go/token&#34;</span>
+<span num="6">    &#34;log&#34;</span>
+<span num="7">    &#34;reflect&#34;</span>
+<span num="8"></span>
+<span num="9">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="10">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="11">)</span>
+<span num="12"></span>
+<span num="13">var source = `</span>
+<span num="14">package bar</span>
+<span num="15"></span>
+<span num="16">import &#34;fmt&#34;</span>
+<span num="17"></span>
+<span num="18">type Point struct {</span>
+<span num="19">    x, y int</span>
+<span num="20">}</span>
+<span num="21"></span>
+<span num="22">func (p *Point) Set(x, y int) {</span>
+<span num="23">    p.x,p.y = x,y</span>
+<span num="24">}</span>
+<span num="25"></span>
+<span num="26">func (p *Point) String() string {</span>
+<span num="27">    return fmt.Sprintf(&#34;(%v,%v)&#34;,p.x,p.y)</span>
+<span num="28">}</span>
+<span num="29">`</span>
+<span num="30"></span>
+<span num="31">func main() {</span>
+<span num="32">    fset := token.NewFileSet()</span>
+<span num="33">    ctx := gossa.NewContext(0)</span>
+<span num="34">    pkg, err := ctx.LoadFile(fset, &#34;main.go&#34;, source)</span>
+<span num="35">    if err != nil {</span>
+<span num="36">        log.Panicln(&#34;load&#34;, err)</span>
+<span num="37">    }</span>
+<span num="38">    interp, err := ctx.NewInterp(pkg)</span>
+<span num="39">    if err != nil {</span>
+<span num="40">        log.Panicln(&#34;interp&#34;, err)</span>
+<span num="41">    }</span>
+<span num="42">    if typ, ok := interp.GetType(&#34;Point&#34;); ok {</span>
+<span num="43">        v := reflect.New(typ)</span>
+<span num="44">        fn := v.MethodByName(&#34;Set&#34;)</span>
+<span num="45">        fn.Interface().(func(int, int))(100, 200)</span>
+<span num="46">        fmt.Println(v)</span>
+<span num="47">    }</span>
+<span num="48">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 实践</h3>
+        <ul>
+<li>写一个 ispx 程序运行 github.com/goplus/spx 应用</li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre class="numbers"><span num="1">package main</span>
+<span num="2"></span>
+<span num="3">//go:generate qexp -outdir pkg github.com/goplus/spx</span>
+<span num="4"></span>
+<span num="5">import (</span>
+<span num="6">    &#34;flag&#34;</span>
+<span num="7">    &#34;fmt&#34;</span>
+<span num="8">    &#34;log&#34;</span>
+<span num="9">    &#34;os&#34;</span>
+<span num="10">    &#34;path/filepath&#34;</span>
+<span num="11"></span>
+<span num="12">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="13">    &#34;github.com/goplus/gossa/gopbuild&#34;</span>
+<span num="14">    &#34;github.com/goplus/spx&#34;</span>
+<span num="15"></span>
+<span num="16">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
+<span num="17">    _ &#34;github.com/goplus/gossa/pkg/math&#34;</span>
+<span num="18">    _ &#34;github.com/visualfc/ispx/pkg/github.com/goplus/spx&#34;</span>
+<span num="19"></span>
+<span num="20">    _ &#34;github.com/goplus/reflectx/icall/icall11&#34;</span>
+<span num="21">)</span>
+<span num="22"></span>
+<span num="23">var (</span>
+<span num="24">    flagDumpSrc bool</span>
+<span num="25">    flagDumpPkg bool</span>
+<span num="26">    flagDumpSSA bool</span>
+<span num="27">)</span>
+<span num="28"></span>
+<span num="29">func init() {</span>
+<span num="30">    flag.Usage = func() {</span>
+<span num="31">        fmt.Fprintf(os.Stderr, &#34;ispc [-dumpsrc|-dumppkg|-dumpssa] dir\n&#34;)</span>
+<span num="32">        flag.PrintDefaults()</span>
+<span num="33">    }</span>
+<span num="34">    flag.BoolVar(&amp;flagDumpSrc, &#34;dumpsrc&#34;, false, &#34;print source code&#34;)</span>
+<span num="35">    flag.BoolVar(&amp;flagDumpPkg, &#34;dumppkg&#34;, false, &#34;print import packages&#34;)</span>
+<span num="36">    flag.BoolVar(&amp;flagDumpSSA, &#34;dumpssa&#34;, false, &#34;print ssa code information&#34;)</span>
+<span num="37">}</span>
+<span num="38"></span>
+<span num="39">func main() {</span>
+<span num="40">    flag.Parse()</span>
+<span num="41">    args := flag.Args()</span>
+<span num="42">    if len(args) != 1 {</span>
+<span num="43">        flag.Usage()</span>
+<span num="44">        return</span>
+<span num="45">    }</span>
+<span num="46">    path := args[0]</span>
+<span num="47">    var mode gossa.Mode</span>
+<span num="48">    if flagDumpPkg {</span>
+<span num="49">        mode |= gossa.EnableDumpPackage</span>
+<span num="50">    }</span>
+<span num="51">    if flagDumpSSA {</span>
+<span num="52">        mode |= gossa.EnableDumpPackage</span>
+<span num="53">    }</span>
+<span num="54">    ctx := gossa.NewContext(mode)</span>
+<span num="55">    data, err := gopbuild.BuildDir(ctx, path)</span>
+<span num="56">    if err != nil {</span>
+<span num="57">        log.Panicln(err)</span>
+<span num="58">    }</span>
+<span num="59">    if flagDumpSrc {</span>
+<span num="60">        fmt.Println(string(data))</span>
+<span num="61">    }</span>
+<span num="62">    if !filepath.IsAbs(path) {</span>
+<span num="63">        dir, _ := os.Getwd()</span>
+<span num="64">        path = filepath.Join(dir, path)</span>
+<span num="65">    }</span>
+<span num="66">    gossa.RegisterExternal(&#34;github.com/goplus/spx.Gopt_Game_Run&#34;, func(game spx.Gamer, resource interface{}, gameConf ...*spx.Config) {</span>
+<span num="67">        os.Chdir(path)</span>
+<span num="68">        spx.Gopt_Game_Run(game, resource, gameConf...)</span>
+<span num="69">    })</span>
+<span num="70">    _, err = ctx.RunFile(&#34;main.go&#34;, data, nil)</span>
+<span num="71">    if err != nil {</span>
+<span num="72">        log.Panicln(err)</span>
+<span num="73">    }</span>
+<span num="74">}</span>
+</pre>
+</div>
+<p class="link"><a href="https://github.com/visualfc/ispx" target="_blank">github.com/visualfc/ispx</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 实现原理</h3>
+        <ul>
+<li>Golang SSA package</li>
+</ul>
+<p>Package ssa defines a representation of the elements of Go programs (packages, types, functions, variables and constants) using a static single-assignment (SSA) form intermediate representation (IR) for the bodies of functions.</p>
+<p class="link"><a href="https://pkg.go.dev/golang.org/x/tools/go/ssa" target="_blank">pkg.go.dev/golang.org/x/tools/go/ssa</a></p><ul>
+<li>reflectx package ( Go runtime 兼容)</li>
+</ul>
+<p class="link"><a href="https://github.com/goplus/reflectx" target="_blank">github.com/goplus/reflectx</a></p><ul>
+<li>reflectx package for GopherJS</li>
+</ul>
+<p class="link"><a href="https://github.com/goplusjs/reflectx" target="_blank">github.com/goplusjs/reflectx</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 存在问题</h3>
+        <ul>
+<li>
+<p>Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。</p>
+<p>GOEXPERIMENT=noregabi go build demo</p>
+</li>
+<li>
+<p>Go1.18 amd64 默认使用 regabi 目前无法运行。</p>
+<p>使用 ASM 编写 regabi 兼容 method provider</p>
+</li>
+<li>
+<p>typed methods 数量限制，预分配 256 个。</p>
+<p>import _ &quot;github.com/reflectx/icall/icall10&quot; // 2^n (10~16)</p>
+<p>使用 reflectx/cmd/icall_gen 生成需要的 methods</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>Go&#43; Playground</h3>
+        <p class="link"><a href="https://go.dev/play" target="_blank">go.dev/play</a></p><p class="link"><a href="https://play.goplus.org" target="_blank">play.goplus.org</a></p><p class="link"><a href="https://jsplay.goplus.org" target="_blank">jsplay.goplus.org</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>jsplay.goplus.org 实现</h3>
+        <p>源码</p>
+<p class="link"><a href="https://github.com/goplusjs/play" target="_blank">github.com/goplusjs/play</a></p><pre><code>
+   
+module github.com/goplusjs/play
+
+go 1.16
+
+require (
+    github.com/goplus/gop v1.0.33
+    github.com/goplus/gossa v0.2.6
+    github.com/goplus/gox v1.8.1
+    github.com/goplus/reflectx v0.6.8
+    github.com/goplusjs/gopherjs v1.2.5
+    golang.org/x/tools v0.1.8
+)
+
+replace github.com/goplus/reflectx =&gt; github.com/goplusjs/reflectx v0.5.6
+</code></pre>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>jsplay.goplus.org 引用库</h3>
+        <p class="link"><a href="https://github.com/goplus/gop" target="_blank">github.com/goplus/gop</a></p><p class="link"><a href="https://github.com/goplus/gossa" target="_blank">github.com/goplus/gossa</a></p><p class="link"><a href="https://github.com/goplus/reflectx" target="_blank">github.com/goplus/reflectx</a></p><p class="link"><a href="https://github.com/goplusjs/reflectx" target="_blank">github.com/goplusjs/reflectx</a></p><p class="link"><a href="https://github.com/goplusjs/gopherjs" target="_blank">github.com/goplusjs/gopherjs</a></p>
+      
+      </article>
+  
+  
+
+      <article>
+        <h3>Thank you</h1>
+        
+          <div class="presenter">
+            
+  
+  <p>
+    七叶
+  </p>
+  
+
+  
+  <p>
+    2021.12.22
+  </p>
+  
+<p class="link"><a href="mailto:vfc@goplus.org" target="_blank">vfc@goplus.org</a></p>
+          </div>
+        
+      </article>
+
+  </body>
+  
+</html>
