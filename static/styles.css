@@ -316,7 +316,7 @@ div.code {
   background: rgb(240, 240, 240);
   border: 1px solid rgb(224, 224, 224);
 
-  max-height: 500px;
+  max-height: 450px;
 }
 pre {
   margin: 0;
