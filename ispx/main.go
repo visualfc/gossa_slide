@@ -49,7 +49,7 @@ func main() {
 		mode |= gossa.EnableDumpPackage
 	}
 	if flagDumpSSA {
-		mode |= gossa.EnableDumpPackage
+		mode |= gossa.EnableTracing
 	}
 	ctx := gossa.NewContext(mode)
 	data, err := gopbuild.BuildDir(ctx, path)
