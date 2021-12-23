@@ -33,8 +33,10 @@ func main() {
 	if err != nil {
 		log.Panicln("interp", err)
 	}
+
+	// go/constant.Value
 	if v, ok := interp.GetConst("Pi"); ok {
-		fmt.Println(v)
+		fmt.Printf("%v %T\n", v, v)
 		fmt.Println(v.ExactString())
 	}
 }

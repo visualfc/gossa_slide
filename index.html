@@ -43,7 +43,7 @@
 <li>gossa 项目简介</li>
 <li>gossa 使用示例</li>
 <li>gossa 实现原理</li>
-<li>gossa 存在问题</li>
+<li>gossa 改进空间</li>
 </ul>
 
       
@@ -65,9 +65,12 @@
 <li>代码示例</li>
 </ul>
 <p class="link"><a href="https://github.com/visualfc/gossa_demo" target="_blank">github.com/visualfc/gossa_demo</a></p><ul>
+<li>项目应用：使用 gossa 实现的 spx 游戏解释器</li>
+</ul>
+<p class="link"><a href="https://github.com/goplus/ispx" target="_blank">github.com/goplus/ispx</a></p><ul>
 <li>项目应用：使用 gossa 实现的 Go+ Playground</li>
 </ul>
-<p class="link"><a href="https://jsplay.goplus.org" target="_blank">jsplay.goplus.org</a></p><p class="link"><a href="./jsplay.html" target="_blank">./jsplay.html</a></p>
+<p class="link"><a href="https://jsplay.goplus.org" target="_blank">jsplay.goplus.org</a></p>
       
       </article>
   
@@ -77,7 +80,7 @@
       
         <h3>为什么要开发 gossa</h3>
         <ul>
-<li>为什么要自己开发 gossa 项目，而不是使用现有的如 yaegi 项目。</li>
+<li>我们为什么要开发 gossa 项目，而不是使用现有的如 yaegi 项目。</li>
 </ul>
 <p class="link"><a href="https://github.com/traefik/yaegi" target="_blank">github.com/traefik/yaegi</a></p><ul>
 <li>
@@ -234,7 +237,7 @@ WASM/GopherJS 平台支持</p>
 </li>
 <li>
 <p>typed methods 数量限制，预分配 256 个。</p>
-<p>import _ &quot;github.com/reflectx/icall/icall10&quot; // 2^n (10~16)</p>
+<p>import _ &quot;github.com/reflectx/icall/icall[2^n]&quot;</p>
 <p>使用 reflectx/cmd/icall_gen 生成需要的 methods</p>
 </li>
 <li>
@@ -350,6 +353,8 @@ WASM/GopherJS 平台支持</p>
 <p>gossa 导入包</p>
 <p>github.com/goplus/gossa/pkg/...</p>
 </li>
+</ul>
+<p class="link"><a href="https://github.com/goplus/gossa/tree/main/pkg" target="_blank">github.com/goplus/gossa/tree/main/pkg</a></p><ul>
 <li>
 <p>gossa 命令程序，测试用</p>
 <p>github.com/goplus/gossa/cmd/gossa</p>
@@ -466,7 +471,7 @@ WASM/GopherJS 平台支持</p>
       
         <h3>gossa demo3</h3>
         <ul>
-<li>运行 interface 版本 Hello World ( 实现 Go runtime 兼容)</li>
+<li>运行 interface 版本 Hello World ( 实现 Go runtime 内存布局兼容)</li>
 </ul>
 
   <div class="code" contenteditable="true" spellcheck="false">
@@ -513,7 +518,7 @@ WASM/GopherJS 平台支持</p>
       
         <h3>gossa demo4</h3>
         <ul>
-<li>实现 Go runtime 兼容, main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。</li>
+<li>main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。</li>
 </ul>
 
   <div class="code" contenteditable="true" spellcheck="false">
@@ -735,10 +740,12 @@ WASM/GopherJS 平台支持</p>
         <h3>github.com/goplus/gossa 底层控制</h3>
         <ul>
 <li>
-<p>gossa.Context 环境控制</p>
+<p>gossa.Context 上下文/环境控制</p>
+<p>LoadFile/LoadAst/RunPkg/TestPkg/NewInterp 。。。</p>
 </li>
 <li>
 <p>gossa.Interp 执行引擎</p>
+<p>Run/RunFunc/GetFunc 。。。</p>
 </li>
 </ul>
 
@@ -1251,11 +1258,13 @@ WASM/GopherJS 平台支持</p>
 <span num="33">    if err != nil {</span>
 <span num="34">        log.Panicln(&#34;interp&#34;, err)</span>
 <span num="35">    }</span>
-<span num="36">    if v, ok := interp.GetConst(&#34;Pi&#34;); ok {</span>
-<span num="37">        fmt.Println(v)</span>
-<span num="38">        fmt.Println(v.ExactString())</span>
-<span num="39">    }</span>
-<span num="40">}</span>
+<span num="36"></span>
+<span num="37">    // go/constant.Value</span>
+<span num="38">    if v, ok := interp.GetConst(&#34;Pi&#34;); ok {</span>
+<span num="39">        fmt.Printf(&#34;%v %T\n&#34;, v, v)</span>
+<span num="40">        fmt.Println(v.ExactString())</span>
+<span num="41">    }</span>
+<span num="42">}</span>
 </pre>
 </div>
 
@@ -1330,11 +1339,41 @@ WASM/GopherJS 平台支持</p>
   
       <article>
       
-        <h3>gossa 实践</h3>
+        <h3>gossa 实战</h3>
         <ul>
-<li>写一个 ispx 程序运行 github.com/goplus/spx 应用</li>
+<li>
+<p>写一个 ispx 程序运行 github.com/goplus/spx 应用 ( Go+ class file )</p>
+</li>
+<li>
+<p>ispx 项目地址</p>
+</li>
 </ul>
+<p class="link"><a href="https://github.com/goplus/ispx" target="_blank">github.com/goplus/ispx</a></p><ul>
+<li>ispx 项目使用</li>
+</ul>
+<p>安装 ispx</p>
+<pre><code>$ go get github.com/goplus/ispx
+</code></pre>
+<p>下载 FlappyCalf</p>
+<pre><code>$ git clone https://github.com/goplus/FlappyCalf
+</code></pre>
+<p>运行方式 1</p>
+<pre><code>$ ispx FlappyCalf
+</code></pre>
+<p>运行方式 2</p>
+<pre><code>$ cd FlappyCalf
+$ ispx .
+</code></pre>
 
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>ispx 的实现代码</h3>
+        
   <div class="code" contenteditable="true" spellcheck="false">
 <pre class="numbers"><span num="1">package main</span>
 <span num="2"></span>
@@ -1353,9 +1392,9 @@ WASM/GopherJS 平台支持</p>
 <span num="15"></span>
 <span num="16">    _ &#34;github.com/goplus/gossa/pkg/fmt&#34;</span>
 <span num="17">    _ &#34;github.com/goplus/gossa/pkg/math&#34;</span>
-<span num="18">    _ &#34;github.com/visualfc/ispx/pkg/github.com/goplus/spx&#34;</span>
+<span num="18">    _ &#34;github.com/goplus/ispx/pkg/github.com/goplus/spx&#34;</span>
 <span num="19"></span>
-<span num="20">    _ &#34;github.com/goplus/reflectx/icall/icall11&#34;</span>
+<span num="20">    _ &#34;github.com/goplus/reflectx/icall/icall8192&#34;</span>
 <span num="21">)</span>
 <span num="22"></span>
 <span num="23">var (</span>
@@ -1387,7 +1426,7 @@ WASM/GopherJS 平台支持</p>
 <span num="49">        mode |= gossa.EnableDumpPackage</span>
 <span num="50">    }</span>
 <span num="51">    if flagDumpSSA {</span>
-<span num="52">        mode |= gossa.EnableDumpPackage</span>
+<span num="52">        mode |= gossa.EnableTracing</span>
 <span num="53">    }</span>
 <span num="54">    ctx := gossa.NewContext(mode)</span>
 <span num="55">    data, err := gopbuild.BuildDir(ctx, path)</span>
@@ -1412,7 +1451,358 @@ WASM/GopherJS 平台支持</p>
 <span num="74">}</span>
 </pre>
 </div>
-<p class="link"><a href="https://github.com/visualfc/ispx" target="_blank">github.com/visualfc/ispx</a></p>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>ispx 依赖包</h3>
+        <p>$ ispx -dumppkg .</p>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre class="numbers"><span num="1">$ ispx -dumppkg .</span>
+<span num="2">2021/12/23 08:27:56 imported package spx (&#34;github.com/goplus/spx&#34;)</span>
+<span num="3">2021/12/23 08:27:56 imported package math (&#34;math&#34;)</span>
+<span num="4">2021/12/23 08:27:56 indirect package camera (&#34;github.com/goplus/spx/internal/camera&#34;)</span>
+<span num="5">2021/12/23 08:27:56 indirect package tools (&#34;github.com/goplus/spx/internal/tools&#34;)</span>
+<span num="6">2021/12/23 08:27:56 indirect package atlas (&#34;github.com/hajimehoshi/ebiten/v2/internal/atlas&#34;)</span>
+<span num="7">2021/12/23 08:27:56 indirect package graphicscommand (&#34;github.com/hajimehoshi/ebiten/v2/internal/graphicscommand&#34;)</span>
+<span num="8">2021/12/23 08:27:56 indirect package constant (&#34;go/constant&#34;)</span>
+<span num="9">2021/12/23 08:27:56 indirect package fs (&#34;github.com/goplus/spx/fs&#34;)</span>
+<span num="10">2021/12/23 08:27:56 indirect package math32 (&#34;github.com/goplus/spx/internal/math32&#34;)</span>
+<span num="11">2021/12/23 08:27:56 imported package fmt (&#34;fmt&#34;)</span>
+<span num="12">2021/12/23 08:27:56 indirect package rand (&#34;math/rand&#34;)</span>
+<span num="13">2021/12/23 08:27:56 indirect package audio (&#34;github.com/hajimehoshi/ebiten/v2/audio&#34;)</span>
+<span num="14">2021/12/23 08:27:56 indirect package reflect (&#34;reflect&#34;)</span>
+<span num="15">2021/12/23 08:27:56 indirect package ebiten (&#34;github.com/hajimehoshi/ebiten/v2&#34;)</span>
+<span num="16">2021/12/23 08:27:56 indirect package mipmap (&#34;github.com/hajimehoshi/ebiten/v2/internal/mipmap&#34;)</span>
+<span num="17">2021/12/23 08:27:57 indirect package restorable (&#34;github.com/hajimehoshi/ebiten/v2/internal/restorable&#34;)</span>
+<span num="18">2021/12/23 08:27:57 imported package strconv (&#34;strconv&#34;)</span>
+<span num="19">2021/12/23 08:27:57 indirect package io (&#34;io&#34;)</span>
+<span num="20">2021/12/23 08:27:57 imported package builtin (&#34;github.com/goplus/gop/builtin&#34;)</span>
+<span num="21">2021/12/23 08:27:57 indirect package driver (&#34;github.com/hajimehoshi/ebiten/v2/internal/driver&#34;)</span>
+<span num="22">2021/12/23 08:27:57 indirect package v2 (&#34;github.com/hajimehoshi/oto/v2&#34;)</span>
+<span num="23">2021/12/23 08:27:57 imported package unsafe (&#34;unsafe&#34;)</span>
+<span num="24">2021/12/23 08:27:57 imported package strings (&#34;strings&#34;)</span>
+<span num="25">2021/12/23 08:27:57 indirect package color (&#34;image/color&#34;)</span>
+<span num="26">2021/12/23 08:27:57 indirect package time (&#34;time&#34;)</span>
+<span num="27">2021/12/23 08:27:57 indirect package anim (&#34;github.com/goplus/spx/internal/anim&#34;)</span>
+<span num="28">2021/12/23 08:27:57 indirect package buffered (&#34;github.com/hajimehoshi/ebiten/v2/internal/buffered&#34;)</span>
+<span num="29">2021/12/23 08:27:57 indirect package affine (&#34;github.com/hajimehoshi/ebiten/v2/internal/affine&#34;)</span>
+<span num="30">2021/12/23 08:27:57 indirect package shaderir (&#34;github.com/hajimehoshi/ebiten/v2/internal/shaderir&#34;)</span>
+<span num="31">2021/12/23 08:27:57 indirect package packing (&#34;github.com/hajimehoshi/ebiten/v2/internal/packing&#34;)</span>
+<span num="32">2021/12/23 08:27:57 indirect package gdi (&#34;github.com/goplus/spx/internal/gdi&#34;)</span>
+<span num="33">2021/12/23 08:27:57 indirect package audiorecord (&#34;github.com/goplus/spx/internal/audiorecord&#34;)</span>
+<span num="34">2021/12/23 08:27:57 imported package big (&#34;math/big&#34;)</span>
+<span num="35">2021/12/23 08:27:57 indirect package sync (&#34;sync&#34;)</span>
+<span num="36">2021/12/23 08:27:57 indirect package unicode (&#34;unicode&#34;)</span>
+<span num="37">2021/12/23 08:27:57 indirect package image (&#34;image&#34;)</span>
+<span num="38">2021/12/23 08:27:57 indirect package coroutine (&#34;github.com/goplus/spx/internal/coroutine&#34;)</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>ispx 的 spx 导入包</h3>
+        <ul>
+<li>使用 qexp 生成导入包  <code>$ qexp -outdir pkg github.com/goplus/spx</code></li>
+</ul>
+
+  <div class="code" contenteditable="true" spellcheck="false">
+<pre class="numbers"><span num="1">// export by github.com/goplus/gossa/cmd/qexp</span>
+<span num="2"></span>
+<span num="3">package spx</span>
+<span num="4"></span>
+<span num="5">import (</span>
+<span num="6">    q &#34;github.com/goplus/spx&#34;</span>
+<span num="7"></span>
+<span num="8">    &#34;go/constant&#34;</span>
+<span num="9">    &#34;reflect&#34;</span>
+<span num="10"></span>
+<span num="11">    &#34;github.com/goplus/gossa&#34;</span>
+<span num="12">)</span>
+<span num="13"></span>
+<span num="14">func init() {</span>
+<span num="15">    gossa.RegisterPackage(&amp;gossa.Package{</span>
+<span num="16">        Name: &#34;spx&#34;,</span>
+<span num="17">        Path: &#34;github.com/goplus/spx&#34;,</span>
+<span num="18">        Deps: map[string]string{</span>
+<span num="19">            &#34;encoding/json&#34;:                       &#34;json&#34;,</span>
+<span num="20">            &#34;errors&#34;:                              &#34;errors&#34;,</span>
+<span num="21">            &#34;flag&#34;:                                &#34;flag&#34;,</span>
+<span num="22">            &#34;fmt&#34;:                                 &#34;fmt&#34;,</span>
+<span num="23">            &#34;github.com/goplus/spx/fs&#34;:            &#34;fs&#34;,</span>
+<span num="24">            &#34;github.com/goplus/spx/fs/asset&#34;:      &#34;asset&#34;,</span>
+<span num="25">            &#34;github.com/goplus/spx/fs/zip&#34;:        &#34;zip&#34;,</span>
+<span num="26">            &#34;github.com/goplus/spx/internal/anim&#34;: &#34;anim&#34;,</span>
+<span num="27">            &#34;github.com/goplus/spx/internal/audiorecord&#34;: &#34;audiorecord&#34;,</span>
+<span num="28">            &#34;github.com/goplus/spx/internal/camera&#34;:      &#34;camera&#34;,</span>
+<span num="29">            &#34;github.com/goplus/spx/internal/coroutine&#34;:   &#34;coroutine&#34;,</span>
+<span num="30">            &#34;github.com/goplus/spx/internal/effect&#34;:      &#34;effect&#34;,</span>
+<span num="31">            &#34;github.com/goplus/spx/internal/gdi&#34;:         &#34;gdi&#34;,</span>
+<span num="32">            &#34;github.com/goplus/spx/internal/gdi/clrutil&#34;: &#34;clrutil&#34;,</span>
+<span num="33">            &#34;github.com/goplus/spx/internal/gdi/font&#34;:    &#34;font&#34;,</span>
+<span num="34">            &#34;github.com/goplus/spx/internal/math32&#34;:      &#34;math32&#34;,</span>
+<span num="35">            &#34;github.com/goplus/spx/internal/tools&#34;:       &#34;tools&#34;,</span>
+<span num="36">            &#34;github.com/hajimehoshi/ebiten/v2&#34;:           &#34;ebiten&#34;,</span>
+<span num="37">            &#34;github.com/hajimehoshi/ebiten/v2/audio&#34;:     &#34;audio&#34;,</span>
+<span num="38">            &#34;github.com/pkg/errors&#34;:                      &#34;errors&#34;,</span>
+<span num="39">            &#34;github.com/qiniu/audio&#34;:                     &#34;audio&#34;,</span>
+<span num="40">            &#34;github.com/qiniu/audio/convert&#34;:             &#34;convert&#34;,</span>
+<span num="41">            &#34;github.com/qiniu/audio/mp3&#34;:                 &#34;mp3&#34;,</span>
+<span num="42">            &#34;github.com/qiniu/audio/wav&#34;:                 &#34;wav&#34;,</span>
+<span num="43">            &#34;github.com/qiniu/audio/wav/adpcm&#34;:           &#34;adpcm&#34;,</span>
+<span num="44">            &#34;golang.org/x/image/colornames&#34;:              &#34;colornames&#34;,</span>
+<span num="45">            &#34;golang.org/x/image/font&#34;:                    &#34;font&#34;,</span>
+<span num="46">            &#34;image&#34;:                                      &#34;image&#34;,</span>
+<span num="47">            &#34;image/color&#34;:                                &#34;color&#34;,</span>
+<span num="48">            &#34;image/jpeg&#34;:                                 &#34;jpeg&#34;,</span>
+<span num="49">            &#34;image/png&#34;:                                  &#34;png&#34;,</span>
+<span num="50">            &#34;io&#34;:                                         &#34;io&#34;,</span>
+<span num="51">            &#34;log&#34;:                                        &#34;log&#34;,</span>
+<span num="52">            &#34;math&#34;:                                       &#34;math&#34;,</span>
+<span num="53">            &#34;math/rand&#34;:                                  &#34;rand&#34;,</span>
+<span num="54">            &#34;os&#34;:                                         &#34;os&#34;,</span>
+<span num="55">            &#34;path&#34;:                                       &#34;path&#34;,</span>
+<span num="56">            &#34;path/filepath&#34;:                              &#34;filepath&#34;,</span>
+<span num="57">            &#34;reflect&#34;:                                    &#34;reflect&#34;,</span>
+<span num="58">            &#34;strconv&#34;:                                    &#34;strconv&#34;,</span>
+<span num="59">            &#34;strings&#34;:                                    &#34;strings&#34;,</span>
+<span num="60">            &#34;sync&#34;:                                       &#34;sync&#34;,</span>
+<span num="61">            &#34;sync/atomic&#34;:                                &#34;atomic&#34;,</span>
+<span num="62">            &#34;syscall&#34;:                                    &#34;syscall&#34;,</span>
+<span num="63">            &#34;time&#34;:                                       &#34;time&#34;,</span>
+<span num="64">            &#34;unsafe&#34;:                                     &#34;unsafe&#34;,</span>
+<span num="65">        },</span>
+<span num="66">        Interfaces: map[string]reflect.Type{</span>
+<span num="67">            &#34;Gamer&#34;: reflect.TypeOf((*q.Gamer)(nil)).Elem(),</span>
+<span num="68">            &#34;Shape&#34;: reflect.TypeOf((*q.Shape)(nil)).Elem(),</span>
+<span num="69">        },</span>
+<span num="70">        NamedTypes: map[string]gossa.NamedType{</span>
+<span num="71">            &#34;Camera&#34;:        {reflect.TypeOf((*q.Camera)(nil)).Elem(), &#34;&#34;, &#34;ChangeXYpos,On,SetXYpos,init,isWorldRange,render,screenToWorld,updateOnObj&#34;},</span>
+<span num="72">            &#34;Config&#34;:        {reflect.TypeOf((*q.Config)(nil)).Elem(), &#34;&#34;, &#34;&#34;},</span>
+<span num="73">            &#34;EffectKind&#34;:    {reflect.TypeOf((*q.EffectKind)(nil)).Elem(), &#34;String&#34;, &#34;&#34;},</span>
+<span num="74">            &#34;Game&#34;:          {reflect.TypeOf((*q.Game)(nil)).Elem(), &#34;&#34;, &#34;Answer,Ask,Broadcast__0,Broadcast__1,Broadcast__2,ChangeEffect,ChangeVolume,ClearSoundEffects,Draw,EraseAll,HideVar,KeyPressed,Layout,Loudness,MouseHitItem,MousePressed,MouseX,MouseY,NextScene,Play__0,PrevScene,ResetTimer,SceneIndex,SceneName,SetEffect,SetVolume,ShowVar,StartScene,StopAllSounds,Timer,Update,Username,Volume,Wait,activateShape,addClonedShape,addShape,addSpecialShape,addStageSprite,addStageSprites,currentTPS,doBroadcast,doFindSprite,doWhenLeftButtonDown,doWindowSize,doWorldSize,drawBackground,endLoad,eventLoop,findSprite,fireEvent,getItems,getMousePos,getSharedImgs,getTurtle,getWidth,goBackByLayers,handleEvent,initEventLoop,initGame,loadIndex,loadSound,loadSprite,movePen,objectPos,onDraw,onHit,removeShape,reset,runLoop,setStageMonitor,stampCostume,startLoad,startTick,touchingPoint,touchingSpriteBy,updateMousePos,windowSize_,worldSize_&#34;},</span>
+<span num="75">            &#34;List&#34;:          {reflect.TypeOf((*q.List)(nil)).Elem(), &#34;&#34;, &#34;Append,At,Contains,Delete,Init,InitFrom,Insert,Len,Set,String&#34;},</span>
+<span num="76">            &#34;MovingInfo&#34;:    {reflect.TypeOf((*q.MovingInfo)(nil)).Elem(), &#34;&#34;, &#34;Dx,Dy,StopMoving&#34;},</span>
+<span num="77">            &#34;RotationStyle&#34;: {reflect.TypeOf((*q.RotationStyle)(nil)).Elem(), &#34;&#34;, &#34;&#34;},</span>
+<span num="78">            &#34;Sound&#34;:         {reflect.TypeOf((*q.Sound)(nil)).Elem(), &#34;&#34;, &#34;&#34;},</span>
+<span num="79">            &#34;Sprite&#34;:        {reflect.TypeOf((*q.Sprite)(nil)).Elem(), &#34;&#34;, &#34;Animate,Ask,BounceOffEdge,Bounds,ChangeEffect,ChangeHeading,ChangePenColor,ChangePenHue,ChangePenShade,ChangePenSize,ChangeSize,ChangeXYpos,ChangeXpos,ChangeYpos,ClearGraphEffects,CostumeHeight,CostumeIndex,CostumeName,CostumeWidth,Destroy,Die,DistanceTo,Glide__0,Glide__1,GoBackLayers,Goto,GotoBack,GotoFront,Heading,Hide,HideVar,InitFrom,IsCloned,Move__0,Move__1,NextCostume,OnCloned__0,OnCloned__1,OnMoving__0,OnMoving__1,OnTouched__0,OnTouched__1,OnTouched__2,OnTouched__3,OnTouched__4,OnTouched__5,OnTurning__0,OnTurning__1,Parent,PenDown,PenUp,Pixel,PrevCostume,Say,SetCostume,SetDying,SetEffect,SetHeading,SetPenColor,SetPenHue,SetPenShade,SetPenSize,SetRotationStyle,SetSize,SetXYpos,SetXpos,SetYpos,Show,ShowVar,Size,Stamp,Step__0,Step__1,Step__2,Think,Touching,TouchingColor,Turn,TurnTo,Visible,Xpos,Ypos,checkTouchingScreen,doDestroy,doMoveTo,doMoveToForAnim,doStopSay,doTurnTogether,doUpdatePenColor,draw,fireTouched,fixWorldRange,getDrawInfo,getFromAnToForAni,getRotatedRect,getTrackPos,getXY,goAnimate,goMoveForward,hit,init,requireGreffUniforms,sayOrThink,setDirection,setPenHue,setPenShade,setPenWidth,touchPoint,touchRotatedRect,touchedColor_,touchingSprite,waitStopSay&#34;},</span>
+<span num="80">            &#34;StopKind&#34;:      {reflect.TypeOf((*q.StopKind)(nil)).Elem(), &#34;&#34;, &#34;&#34;},</span>
+<span num="81">            &#34;TurningInfo&#34;:   {reflect.TypeOf((*q.TurningInfo)(nil)).Elem(), &#34;&#34;, &#34;Dir&#34;},</span>
+<span num="82">            &#34;Value&#34;:         {reflect.TypeOf((*q.Value)(nil)).Elem(), &#34;Equal,Float,Int,String&#34;, &#34;&#34;},</span>
+<span num="83">        },</span>
+<span num="84">        AliasTypes: map[string]reflect.Type{</span>
+<span num="85">            &#34;Color&#34;:   reflect.TypeOf((*q.Color)(nil)).Elem(),</span>
+<span num="86">            &#34;Key&#34;:     reflect.TypeOf((*q.Key)(nil)).Elem(),</span>
+<span num="87">            &#34;Spriter&#34;: reflect.TypeOf((*q.Spriter)(nil)).Elem(),</span>
+<span num="88">        },</span>
+<span num="89">        Vars: map[string]reflect.Value{},</span>
+<span num="90">        Funcs: map[string]reflect.Value{</span>
+<span num="91">            &#34;Exit__0&#34;:              reflect.ValueOf(q.Exit__0),</span>
+<span num="92">            &#34;Exit__1&#34;:              reflect.ValueOf(q.Exit__1),</span>
+<span num="93">            &#34;Gopt_Game_Main&#34;:       reflect.ValueOf(q.Gopt_Game_Main),</span>
+<span num="94">            &#34;Gopt_Game_Reload&#34;:     reflect.ValueOf(q.Gopt_Game_Reload),</span>
+<span num="95">            &#34;Gopt_Game_Run&#34;:        reflect.ValueOf(q.Gopt_Game_Run),</span>
+<span num="96">            &#34;Gopt_Sprite_Clone__0&#34;: reflect.ValueOf(q.Gopt_Sprite_Clone__0),</span>
+<span num="97">            &#34;Gopt_Sprite_Clone__1&#34;: reflect.ValueOf(q.Gopt_Sprite_Clone__1),</span>
+<span num="98">            &#34;Iround&#34;:               reflect.ValueOf(q.Iround),</span>
+<span num="99">            &#34;RGB&#34;:                  reflect.ValueOf(q.RGB),</span>
+<span num="100">            &#34;RGBA&#34;:                 reflect.ValueOf(q.RGBA),</span>
+<span num="101">            &#34;Rand__0&#34;:              reflect.ValueOf(q.Rand__0),</span>
+<span num="102">            &#34;Rand__1&#34;:              reflect.ValueOf(q.Rand__1),</span>
+<span num="103">            &#34;Sched&#34;:                reflect.ValueOf(q.Sched),</span>
+<span num="104">            &#34;SchedNow&#34;:             reflect.ValueOf(q.SchedNow),</span>
+<span num="105">            &#34;SetDebug&#34;:             reflect.ValueOf(q.SetDebug),</span>
+<span num="106">        },</span>
+<span num="107">        TypedConsts: map[string]gossa.TypedConst{</span>
+<span num="108">            &#34;AllOtherScripts&#34;:      {reflect.TypeOf(q.AllOtherScripts), constant.MakeInt64(int64(q.AllOtherScripts))},</span>
+<span num="109">            &#34;AllSprites&#34;:           {reflect.TypeOf(q.AllSprites), constant.MakeInt64(int64(q.AllSprites))},</span>
+<span num="110">            &#34;BrightnessEffect&#34;:     {reflect.TypeOf(q.BrightnessEffect), constant.MakeInt64(int64(q.BrightnessEffect))},</span>
+<span num="111">            &#34;ColorEffect&#34;:          {reflect.TypeOf(q.ColorEffect), constant.MakeInt64(int64(q.ColorEffect))},</span>
+<span num="112">            &#34;Down&#34;:                 {reflect.TypeOf(q.Down), constant.MakeInt64(int64(q.Down))},</span>
+<span num="113">            &#34;Edge&#34;:                 {reflect.TypeOf(q.Edge), constant.MakeInt64(int64(q.Edge))},</span>
+<span num="114">            &#34;EdgeBottom&#34;:           {reflect.TypeOf(q.EdgeBottom), constant.MakeInt64(int64(q.EdgeBottom))},</span>
+<span num="115">            &#34;EdgeLeft&#34;:             {reflect.TypeOf(q.EdgeLeft), constant.MakeInt64(int64(q.EdgeLeft))},</span>
+<span num="116">            &#34;EdgeRight&#34;:            {reflect.TypeOf(q.EdgeRight), constant.MakeInt64(int64(q.EdgeRight))},</span>
+<span num="117">            &#34;EdgeTop&#34;:              {reflect.TypeOf(q.EdgeTop), constant.MakeInt64(int64(q.EdgeTop))},</span>
+<span num="118">            &#34;Key0&#34;:                 {reflect.TypeOf(q.Key0), constant.MakeInt64(int64(q.Key0))},</span>
+<span num="119">            &#34;Key1&#34;:                 {reflect.TypeOf(q.Key1), constant.MakeInt64(int64(q.Key1))},</span>
+<span num="120">            &#34;Key2&#34;:                 {reflect.TypeOf(q.Key2), constant.MakeInt64(int64(q.Key2))},</span>
+<span num="121">            &#34;Key3&#34;:                 {reflect.TypeOf(q.Key3), constant.MakeInt64(int64(q.Key3))},</span>
+<span num="122">            &#34;Key4&#34;:                 {reflect.TypeOf(q.Key4), constant.MakeInt64(int64(q.Key4))},</span>
+<span num="123">            &#34;Key5&#34;:                 {reflect.TypeOf(q.Key5), constant.MakeInt64(int64(q.Key5))},</span>
+<span num="124">            &#34;Key6&#34;:                 {reflect.TypeOf(q.Key6), constant.MakeInt64(int64(q.Key6))},</span>
+<span num="125">            &#34;Key7&#34;:                 {reflect.TypeOf(q.Key7), constant.MakeInt64(int64(q.Key7))},</span>
+<span num="126">            &#34;Key8&#34;:                 {reflect.TypeOf(q.Key8), constant.MakeInt64(int64(q.Key8))},</span>
+<span num="127">            &#34;Key9&#34;:                 {reflect.TypeOf(q.Key9), constant.MakeInt64(int64(q.Key9))},</span>
+<span num="128">            &#34;KeyA&#34;:                 {reflect.TypeOf(q.KeyA), constant.MakeInt64(int64(q.KeyA))},</span>
+<span num="129">            &#34;KeyAlt&#34;:               {reflect.TypeOf(q.KeyAlt), constant.MakeInt64(int64(q.KeyAlt))},</span>
+<span num="130">            &#34;KeyAny&#34;:               {reflect.TypeOf(q.KeyAny), constant.MakeInt64(int64(q.KeyAny))},</span>
+<span num="131">            &#34;KeyApostrophe&#34;:        {reflect.TypeOf(q.KeyApostrophe), constant.MakeInt64(int64(q.KeyApostrophe))},</span>
+<span num="132">            &#34;KeyB&#34;:                 {reflect.TypeOf(q.KeyB), constant.MakeInt64(int64(q.KeyB))},</span>
+<span num="133">            &#34;KeyBackslash&#34;:         {reflect.TypeOf(q.KeyBackslash), constant.MakeInt64(int64(q.KeyBackslash))},</span>
+<span num="134">            &#34;KeyBackspace&#34;:         {reflect.TypeOf(q.KeyBackspace), constant.MakeInt64(int64(q.KeyBackspace))},</span>
+<span num="135">            &#34;KeyC&#34;:                 {reflect.TypeOf(q.KeyC), constant.MakeInt64(int64(q.KeyC))},</span>
+<span num="136">            &#34;KeyCapsLock&#34;:          {reflect.TypeOf(q.KeyCapsLock), constant.MakeInt64(int64(q.KeyCapsLock))},</span>
+<span num="137">            &#34;KeyComma&#34;:             {reflect.TypeOf(q.KeyComma), constant.MakeInt64(int64(q.KeyComma))},</span>
+<span num="138">            &#34;KeyControl&#34;:           {reflect.TypeOf(q.KeyControl), constant.MakeInt64(int64(q.KeyControl))},</span>
+<span num="139">            &#34;KeyD&#34;:                 {reflect.TypeOf(q.KeyD), constant.MakeInt64(int64(q.KeyD))},</span>
+<span num="140">            &#34;KeyDelete&#34;:            {reflect.TypeOf(q.KeyDelete), constant.MakeInt64(int64(q.KeyDelete))},</span>
+<span num="141">            &#34;KeyDown&#34;:              {reflect.TypeOf(q.KeyDown), constant.MakeInt64(int64(q.KeyDown))},</span>
+<span num="142">            &#34;KeyE&#34;:                 {reflect.TypeOf(q.KeyE), constant.MakeInt64(int64(q.KeyE))},</span>
+<span num="143">            &#34;KeyEnd&#34;:               {reflect.TypeOf(q.KeyEnd), constant.MakeInt64(int64(q.KeyEnd))},</span>
+<span num="144">            &#34;KeyEnter&#34;:             {reflect.TypeOf(q.KeyEnter), constant.MakeInt64(int64(q.KeyEnter))},</span>
+<span num="145">            &#34;KeyEqual&#34;:             {reflect.TypeOf(q.KeyEqual), constant.MakeInt64(int64(q.KeyEqual))},</span>
+<span num="146">            &#34;KeyEscape&#34;:            {reflect.TypeOf(q.KeyEscape), constant.MakeInt64(int64(q.KeyEscape))},</span>
+<span num="147">            &#34;KeyF&#34;:                 {reflect.TypeOf(q.KeyF), constant.MakeInt64(int64(q.KeyF))},</span>
+<span num="148">            &#34;KeyF1&#34;:                {reflect.TypeOf(q.KeyF1), constant.MakeInt64(int64(q.KeyF1))},</span>
+<span num="149">            &#34;KeyF10&#34;:               {reflect.TypeOf(q.KeyF10), constant.MakeInt64(int64(q.KeyF10))},</span>
+<span num="150">            &#34;KeyF11&#34;:               {reflect.TypeOf(q.KeyF11), constant.MakeInt64(int64(q.KeyF11))},</span>
+<span num="151">            &#34;KeyF12&#34;:               {reflect.TypeOf(q.KeyF12), constant.MakeInt64(int64(q.KeyF12))},</span>
+<span num="152">            &#34;KeyF2&#34;:                {reflect.TypeOf(q.KeyF2), constant.MakeInt64(int64(q.KeyF2))},</span>
+<span num="153">            &#34;KeyF3&#34;:                {reflect.TypeOf(q.KeyF3), constant.MakeInt64(int64(q.KeyF3))},</span>
+<span num="154">            &#34;KeyF4&#34;:                {reflect.TypeOf(q.KeyF4), constant.MakeInt64(int64(q.KeyF4))},</span>
+<span num="155">            &#34;KeyF5&#34;:                {reflect.TypeOf(q.KeyF5), constant.MakeInt64(int64(q.KeyF5))},</span>
+<span num="156">            &#34;KeyF6&#34;:                {reflect.TypeOf(q.KeyF6), constant.MakeInt64(int64(q.KeyF6))},</span>
+<span num="157">            &#34;KeyF7&#34;:                {reflect.TypeOf(q.KeyF7), constant.MakeInt64(int64(q.KeyF7))},</span>
+<span num="158">            &#34;KeyF8&#34;:                {reflect.TypeOf(q.KeyF8), constant.MakeInt64(int64(q.KeyF8))},</span>
+<span num="159">            &#34;KeyF9&#34;:                {reflect.TypeOf(q.KeyF9), constant.MakeInt64(int64(q.KeyF9))},</span>
+<span num="160">            &#34;KeyG&#34;:                 {reflect.TypeOf(q.KeyG), constant.MakeInt64(int64(q.KeyG))},</span>
+<span num="161">            &#34;KeyGraveAccent&#34;:       {reflect.TypeOf(q.KeyGraveAccent), constant.MakeInt64(int64(q.KeyGraveAccent))},</span>
+<span num="162">            &#34;KeyH&#34;:                 {reflect.TypeOf(q.KeyH), constant.MakeInt64(int64(q.KeyH))},</span>
+<span num="163">            &#34;KeyHome&#34;:              {reflect.TypeOf(q.KeyHome), constant.MakeInt64(int64(q.KeyHome))},</span>
+<span num="164">            &#34;KeyI&#34;:                 {reflect.TypeOf(q.KeyI), constant.MakeInt64(int64(q.KeyI))},</span>
+<span num="165">            &#34;KeyInsert&#34;:            {reflect.TypeOf(q.KeyInsert), constant.MakeInt64(int64(q.KeyInsert))},</span>
+<span num="166">            &#34;KeyJ&#34;:                 {reflect.TypeOf(q.KeyJ), constant.MakeInt64(int64(q.KeyJ))},</span>
+<span num="167">            &#34;KeyK&#34;:                 {reflect.TypeOf(q.KeyK), constant.MakeInt64(int64(q.KeyK))},</span>
+<span num="168">            &#34;KeyKP0&#34;:               {reflect.TypeOf(q.KeyKP0), constant.MakeInt64(int64(q.KeyKP0))},</span>
+<span num="169">            &#34;KeyKP1&#34;:               {reflect.TypeOf(q.KeyKP1), constant.MakeInt64(int64(q.KeyKP1))},</span>
+<span num="170">            &#34;KeyKP2&#34;:               {reflect.TypeOf(q.KeyKP2), constant.MakeInt64(int64(q.KeyKP2))},</span>
+<span num="171">            &#34;KeyKP3&#34;:               {reflect.TypeOf(q.KeyKP3), constant.MakeInt64(int64(q.KeyKP3))},</span>
+<span num="172">            &#34;KeyKP4&#34;:               {reflect.TypeOf(q.KeyKP4), constant.MakeInt64(int64(q.KeyKP4))},</span>
+<span num="173">            &#34;KeyKP5&#34;:               {reflect.TypeOf(q.KeyKP5), constant.MakeInt64(int64(q.KeyKP5))},</span>
+<span num="174">            &#34;KeyKP6&#34;:               {reflect.TypeOf(q.KeyKP6), constant.MakeInt64(int64(q.KeyKP6))},</span>
+<span num="175">            &#34;KeyKP7&#34;:               {reflect.TypeOf(q.KeyKP7), constant.MakeInt64(int64(q.KeyKP7))},</span>
+<span num="176">            &#34;KeyKP8&#34;:               {reflect.TypeOf(q.KeyKP8), constant.MakeInt64(int64(q.KeyKP8))},</span>
+<span num="177">            &#34;KeyKP9&#34;:               {reflect.TypeOf(q.KeyKP9), constant.MakeInt64(int64(q.KeyKP9))},</span>
+<span num="178">            &#34;KeyKPDecimal&#34;:         {reflect.TypeOf(q.KeyKPDecimal), constant.MakeInt64(int64(q.KeyKPDecimal))},</span>
+<span num="179">            &#34;KeyKPDivide&#34;:          {reflect.TypeOf(q.KeyKPDivide), constant.MakeInt64(int64(q.KeyKPDivide))},</span>
+<span num="180">            &#34;KeyKPEnter&#34;:           {reflect.TypeOf(q.KeyKPEnter), constant.MakeInt64(int64(q.KeyKPEnter))},</span>
+<span num="181">            &#34;KeyKPEqual&#34;:           {reflect.TypeOf(q.KeyKPEqual), constant.MakeInt64(int64(q.KeyKPEqual))},</span>
+<span num="182">            &#34;KeyKPMultiply&#34;:        {reflect.TypeOf(q.KeyKPMultiply), constant.MakeInt64(int64(q.KeyKPMultiply))},</span>
+<span num="183">            &#34;KeyKPSubtract&#34;:        {reflect.TypeOf(q.KeyKPSubtract), constant.MakeInt64(int64(q.KeyKPSubtract))},</span>
+<span num="184">            &#34;KeyL&#34;:                 {reflect.TypeOf(q.KeyL), constant.MakeInt64(int64(q.KeyL))},</span>
+<span num="185">            &#34;KeyLeft&#34;:              {reflect.TypeOf(q.KeyLeft), constant.MakeInt64(int64(q.KeyLeft))},</span>
+<span num="186">            &#34;KeyLeftBracket&#34;:       {reflect.TypeOf(q.KeyLeftBracket), constant.MakeInt64(int64(q.KeyLeftBracket))},</span>
+<span num="187">            &#34;KeyM&#34;:                 {reflect.TypeOf(q.KeyM), constant.MakeInt64(int64(q.KeyM))},</span>
+<span num="188">            &#34;KeyMax&#34;:               {reflect.TypeOf(q.KeyMax), constant.MakeInt64(int64(q.KeyMax))},</span>
+<span num="189">            &#34;KeyMenu&#34;:              {reflect.TypeOf(q.KeyMenu), constant.MakeInt64(int64(q.KeyMenu))},</span>
+<span num="190">            &#34;KeyMinus&#34;:             {reflect.TypeOf(q.KeyMinus), constant.MakeInt64(int64(q.KeyMinus))},</span>
+<span num="191">            &#34;KeyN&#34;:                 {reflect.TypeOf(q.KeyN), constant.MakeInt64(int64(q.KeyN))},</span>
+<span num="192">            &#34;KeyNumLock&#34;:           {reflect.TypeOf(q.KeyNumLock), constant.MakeInt64(int64(q.KeyNumLock))},</span>
+<span num="193">            &#34;KeyO&#34;:                 {reflect.TypeOf(q.KeyO), constant.MakeInt64(int64(q.KeyO))},</span>
+<span num="194">            &#34;KeyP&#34;:                 {reflect.TypeOf(q.KeyP), constant.MakeInt64(int64(q.KeyP))},</span>
+<span num="195">            &#34;KeyPageDown&#34;:          {reflect.TypeOf(q.KeyPageDown), constant.MakeInt64(int64(q.KeyPageDown))},</span>
+<span num="196">            &#34;KeyPageUp&#34;:            {reflect.TypeOf(q.KeyPageUp), constant.MakeInt64(int64(q.KeyPageUp))},</span>
+<span num="197">            &#34;KeyPause&#34;:             {reflect.TypeOf(q.KeyPause), constant.MakeInt64(int64(q.KeyPause))},</span>
+<span num="198">            &#34;KeyPeriod&#34;:            {reflect.TypeOf(q.KeyPeriod), constant.MakeInt64(int64(q.KeyPeriod))},</span>
+<span num="199">            &#34;KeyPrintScreen&#34;:       {reflect.TypeOf(q.KeyPrintScreen), constant.MakeInt64(int64(q.KeyPrintScreen))},</span>
+<span num="200">            &#34;KeyQ&#34;:                 {reflect.TypeOf(q.KeyQ), constant.MakeInt64(int64(q.KeyQ))},</span>
+<span num="201">            &#34;KeyR&#34;:                 {reflect.TypeOf(q.KeyR), constant.MakeInt64(int64(q.KeyR))},</span>
+<span num="202">            &#34;KeyRight&#34;:             {reflect.TypeOf(q.KeyRight), constant.MakeInt64(int64(q.KeyRight))},</span>
+<span num="203">            &#34;KeyRightBracket&#34;:      {reflect.TypeOf(q.KeyRightBracket), constant.MakeInt64(int64(q.KeyRightBracket))},</span>
+<span num="204">            &#34;KeyS&#34;:                 {reflect.TypeOf(q.KeyS), constant.MakeInt64(int64(q.KeyS))},</span>
+<span num="205">            &#34;KeyScrollLock&#34;:        {reflect.TypeOf(q.KeyScrollLock), constant.MakeInt64(int64(q.KeyScrollLock))},</span>
+<span num="206">            &#34;KeySemicolon&#34;:         {reflect.TypeOf(q.KeySemicolon), constant.MakeInt64(int64(q.KeySemicolon))},</span>
+<span num="207">            &#34;KeyShift&#34;:             {reflect.TypeOf(q.KeyShift), constant.MakeInt64(int64(q.KeyShift))},</span>
+<span num="208">            &#34;KeySlash&#34;:             {reflect.TypeOf(q.KeySlash), constant.MakeInt64(int64(q.KeySlash))},</span>
+<span num="209">            &#34;KeySpace&#34;:             {reflect.TypeOf(q.KeySpace), constant.MakeInt64(int64(q.KeySpace))},</span>
+<span num="210">            &#34;KeyT&#34;:                 {reflect.TypeOf(q.KeyT), constant.MakeInt64(int64(q.KeyT))},</span>
+<span num="211">            &#34;KeyTab&#34;:               {reflect.TypeOf(q.KeyTab), constant.MakeInt64(int64(q.KeyTab))},</span>
+<span num="212">            &#34;KeyU&#34;:                 {reflect.TypeOf(q.KeyU), constant.MakeInt64(int64(q.KeyU))},</span>
+<span num="213">            &#34;KeyUp&#34;:                {reflect.TypeOf(q.KeyUp), constant.MakeInt64(int64(q.KeyUp))},</span>
+<span num="214">            &#34;KeyV&#34;:                 {reflect.TypeOf(q.KeyV), constant.MakeInt64(int64(q.KeyV))},</span>
+<span num="215">            &#34;KeyW&#34;:                 {reflect.TypeOf(q.KeyW), constant.MakeInt64(int64(q.KeyW))},</span>
+<span num="216">            &#34;KeyX&#34;:                 {reflect.TypeOf(q.KeyX), constant.MakeInt64(int64(q.KeyX))},</span>
+<span num="217">            &#34;KeyY&#34;:                 {reflect.TypeOf(q.KeyY), constant.MakeInt64(int64(q.KeyY))},</span>
+<span num="218">            &#34;KeyZ&#34;:                 {reflect.TypeOf(q.KeyZ), constant.MakeInt64(int64(q.KeyZ))},</span>
+<span num="219">            &#34;Left&#34;:                 {reflect.TypeOf(q.Left), constant.MakeInt64(int64(q.Left))},</span>
+<span num="220">            &#34;Mouse&#34;:                {reflect.TypeOf(q.Mouse), constant.MakeInt64(int64(q.Mouse))},</span>
+<span num="221">            &#34;Next&#34;:                 {reflect.TypeOf(q.Next), constant.MakeInt64(int64(q.Next))},</span>
+<span num="222">            &#34;OtherScriptsInSprite&#34;: {reflect.TypeOf(q.OtherScriptsInSprite), constant.MakeInt64(int64(q.OtherScriptsInSprite))},</span>
+<span num="223">            &#34;Prev&#34;:                 {reflect.TypeOf(q.Prev), constant.MakeInt64(int64(q.Prev))},</span>
+<span num="224">            &#34;Right&#34;:                {reflect.TypeOf(q.Right), constant.MakeInt64(int64(q.Right))},</span>
+<span num="225">            &#34;ThisScript&#34;:           {reflect.TypeOf(q.ThisScript), constant.MakeInt64(int64(q.ThisScript))},</span>
+<span num="226">            &#34;ThisSprite&#34;:           {reflect.TypeOf(q.ThisSprite), constant.MakeInt64(int64(q.ThisSprite))},</span>
+<span num="227">            &#34;Up&#34;:                   {reflect.TypeOf(q.Up), constant.MakeInt64(int64(q.Up))},</span>
+<span num="228">        },</span>
+<span num="229">        UntypedConsts: map[string]gossa.UntypedConst{</span>
+<span num="230">            &#34;All&#34;:          {&#34;untyped int&#34;, constant.MakeInt64(int64(q.All))},</span>
+<span num="231">            &#34;DbgFlagAll&#34;:   {&#34;untyped int&#34;, constant.MakeInt64(int64(q.DbgFlagAll))},</span>
+<span num="232">            &#34;DbgFlagEvent&#34;: {&#34;untyped int&#34;, constant.MakeInt64(int64(q.DbgFlagEvent))},</span>
+<span num="233">            &#34;DbgFlagInstr&#34;: {&#34;untyped int&#34;, constant.MakeInt64(int64(q.DbgFlagInstr))},</span>
+<span num="234">            &#34;DbgFlagLoad&#34;:  {&#34;untyped int&#34;, constant.MakeInt64(int64(q.DbgFlagLoad))},</span>
+<span num="235">            &#34;GopPackage&#34;:   {&#34;untyped bool&#34;, constant.MakeBool(bool(q.GopPackage))},</span>
+<span num="236">            &#34;Gop_sched&#34;:    {&#34;untyped string&#34;, constant.MakeString(string(q.Gop_sched))},</span>
+<span num="237">            &#34;Invalid&#34;:      {&#34;untyped int&#34;, constant.MakeInt64(int64(q.Invalid))},</span>
+<span num="238">            &#34;Last&#34;:         {&#34;untyped int&#34;, constant.MakeInt64(int64(q.Last))},</span>
+<span num="239">            &#34;LeftRight&#34;:    {&#34;untyped int&#34;, constant.MakeInt64(int64(q.LeftRight))},</span>
+<span num="240">            &#34;None&#34;:         {&#34;untyped int&#34;, constant.MakeInt64(int64(q.None))},</span>
+<span num="241">            &#34;Normal&#34;:       {&#34;untyped int&#34;, constant.MakeInt64(int64(q.Normal))},</span>
+<span num="242">            &#34;Random&#34;:       {&#34;untyped int&#34;, constant.MakeInt64(int64(q.Random))},</span>
+<span num="243">        },</span>
+<span num="244">    })</span>
+<span num="245">}</span>
+</pre>
+</div>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>ispx 的 methods 设置</h3>
+        <ul>
+<li>如果注释掉 import _ &quot;github.com/goplus/reflectx/icall/icall8192&quot;
+在 ispx 运行时会出现失败，显示类似下面的代码，表示预分配 methods 不够。</li>
+</ul>
+<p>
+cannot alloc method 3522 > 256, import _ "github.com/goplus/reflectx/icall/icall[2^n]"
+<p>
+fatal error: runtime: text offset base pointer out of ranges
+<p>
+<ul>
+<li>
+<ol>
+<li>我们可以使用 reflectx 预置的分配表</li>
+</ol>
+</li>
+</ul>
+<p>
+github.com/goplus/reflectx/icall/icall[2^n]
+1024 2048 4096 。。。65536
+<ul>
+<li>
+<ol start="2">
+<li>使用 icall_gen 程序自动生成</li>
+</ol>
+</li>
+</ul>
+<p><code>$ go get github.com/goplus/reflectx/cmd/icall_gen</code></p>
+<p>示例：生成 20000 个预分配表</p>
+<p><code>//go:generate icall_gen -o icall.go -pkg main -size 20000</code></p>
+
       
       </article>
   
@@ -1422,16 +1812,13 @@ WASM/GopherJS 平台支持</p>
       
         <h3>gossa 实现原理</h3>
         <ul>
-<li>Golang SSA package</li>
+<li>golang.org/x/tools/go/ssa 实现 types.Package -&gt; ssa.Package 转换</li>
 </ul>
 <p>Package ssa defines a representation of the elements of Go programs (packages, types, functions, variables and constants) using a static single-assignment (SSA) form intermediate representation (IR) for the bodies of functions.</p>
 <p class="link"><a href="https://pkg.go.dev/golang.org/x/tools/go/ssa" target="_blank">pkg.go.dev/golang.org/x/tools/go/ssa</a></p><ul>
-<li>reflectx package ( Go runtime 兼容)</li>
+<li>reflectx package ( Go runtime 内存布局兼容)</li>
 </ul>
-<p class="link"><a href="https://github.com/goplus/reflectx" target="_blank">github.com/goplus/reflectx</a></p><ul>
-<li>reflectx package for GopherJS</li>
-</ul>
-<p class="link"><a href="https://github.com/goplusjs/reflectx" target="_blank">github.com/goplusjs/reflectx</a></p>
+<p class="link"><a href="https://github.com/goplus/reflectx" target="_blank">github.com/goplus/reflectx</a></p><p class="link"><a href="https://github.com/goplusjs/reflectx" target="_blank">github.com/goplusjs/reflectx</a></p>
       
       </article>
   
@@ -1439,20 +1826,83 @@ WASM/GopherJS 平台支持</p>
   
       <article>
       
-        <h3>gossa 存在问题</h3>
+        <h3>gossa 执行流程</h3>
+        <ol>
+<li>
+<p>预注册导入包 imports -&gt; reflect package -&gt; register pkg</p>
+<p>import _ &quot;github.com/goplus/gossa/pkg/fmt&quot;</p>
+</li>
+<li>
+<p>Go+ Source -&gt; Go Source</p>
+<p>import _ &quot;github.com/goplus/gopbuild&quot;</p>
+</li>
+<li>
+<p>Go Source -&gt; ast.Package</p>
+</li>
+<li>
+<p>ast.Package -&gt; types.Package</p>
+<p>查找和安装导入包 reflect package -&gt; types.Package</p>
+<p>直接依赖包/间接依赖包 ( qexp 生成的导入包 )</p>
+</li>
+<li>
+<p>types.Package -&gt; ssa.Program / ssa.Package</p>
+</li>
+<li>
+<p>gossa.Interp 加载 ssa.Program / ssa.Package</p>
+</li>
+</ol>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa.Interp 执行</h3>
         <ul>
 <li>
+<p>类型转换</p>
+<p>ssa.Type -&gt; reflect.Type</p>
+<p>ssa.Value -&gt; gossa.value/interface{}</p>
+</li>
+<li>
+<p>指令执行</p>
+<p>ssa.Instruction</p>
+<p>Function / Block / Var / BinOp 。。。</p>
+</li>
+<li>
+<p>Go runtime 内存布局兼容 methods</p>
+<p>reflectx    NamedTypeOf / InterfaceOf / SetMethodSet 。。。</p>
+</li>
+</ul>
+
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>gossa 改进空间，已知问题和解决方案</h3>
+        <ul>
+<li>
+<p>typed methods 数量限制，预分配 256 个。</p>
+<p>import _ &quot;github.com/reflectx/icall/icall[2^n]&quot;</p>
+<p>使用 reflectx/cmd/icall_gen 生成需要的 methods</p>
+</li>
+<li>
+<p>多源码包加载</p>
+<p>需要 gossa 自行实现 go module 加载机制。</p>
+</li>
+<li>
+<p>Go1.17 引入的 regabi 寄存器调用规范</p>
 <p>Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。</p>
 <p>GOEXPERIMENT=noregabi go build demo</p>
 </li>
 <li>
 <p>Go1.18 amd64 默认使用 regabi 目前无法运行。</p>
-<p>使用 ASM 编写 regabi 兼容 method provider</p>
-</li>
-<li>
-<p>typed methods 数量限制，预分配 256 个。</p>
-<p>import _ &quot;github.com/reflectx/icall/icall10&quot; // 2^n (10~16)</p>
-<p>使用 reflectx/cmd/icall_gen 生成需要的 methods</p>
+<p>reflectx 需要使用 ASM 编写 regabi 兼容 method provider</p>
 </li>
 </ul>
 
@@ -1501,6 +1951,29 @@ replace github.com/goplus/reflectx =&gt; github.com/goplusjs/reflectx v0.5.6
       
         <h3>jsplay.goplus.org 引用库</h3>
         <p class="link"><a href="https://github.com/goplus/gop" target="_blank">github.com/goplus/gop</a></p><p class="link"><a href="https://github.com/goplus/gossa" target="_blank">github.com/goplus/gossa</a></p><p class="link"><a href="https://github.com/goplus/reflectx" target="_blank">github.com/goplus/reflectx</a></p><p class="link"><a href="https://github.com/goplusjs/reflectx" target="_blank">github.com/goplusjs/reflectx</a></p><p class="link"><a href="https://github.com/goplusjs/gopherjs" target="_blank">github.com/goplusjs/gopherjs</a></p>
+      
+      </article>
+  
+  
+  
+      <article>
+      
+        <h3>练习</h3>
+        <ul>
+<li>
+<p>参考 <a href="https://github.com/visualfc/gossa_demo">https://github.com/visualfc/gossa_demo</a> 示例编写和测试程序。</p>
+</li>
+<li>
+<p>使用 WASM 在浏览器中通过 gossa 运行 Go/ Go+ 源码。</p>
+</li>
+<li>
+<p>参考 <a href="https://github.com/goplus/ispx">https://github.com/goplus/ispx</a> 使用 qexp 生成自己需要的导入库来做一些脚本应用实现。</p>
+</li>
+<li>
+<p><a href="https://github.com/goplus/reflectx">https://github.com/goplus/reflectx</a> 的 regabi asm 实现。</p>
+</li>
+</ul>
+
       
       </article>
   

@@ -9,7 +9,7 @@ vfc@goplus.org
 * gossa 项目简介
 * gossa 使用示例
 * gossa 实现原理
-* gossa 存在问题
+* gossa 改进空间
 
 ## 一、gossa 简介
 
@@ -26,20 +26,25 @@ gossa 是一个基于 SSA 实现的 Go 语言解释器，可以直接从 Go/Go+ 
 
 .link https://github.com/visualfc/gossa_demo
 
+* 项目应用：使用 gossa 实现的 spx 游戏解释器
+
+.link https://github.com/goplus/ispx
+
 * 项目应用：使用 gossa 实现的 Go+ Playground
 
 .link https://jsplay.goplus.org
-.link ./jsplay.html
+
 
 ## 为什么要开发 gossa
 
-* 为什么要自己开发 gossa 项目，而不是使用现有的如 yaegi 项目。
+* 我们为什么要开发 gossa 项目，而不是使用现有的如 yaegi 项目。
 
 .link https://github.com/traefik/yaegi
 
 * Go runtime 内存布局兼容性
 
   func / var / const / struct / interface / methods
+
 
 ## Go 版本 interface
 
@@ -104,7 +109,7 @@ gossa 中 T 兼容 fmt.Stringer 接口，正确输出。
 
 * typed methods 数量限制，预分配 256 个。
 
-  import _ "github.com/reflectx/icall/icall10" // 2^n (10~16)
+  import _ "github.com/reflectx/icall/icall[2^n]"
 
   使用 reflectx/cmd/icall_gen 生成需要的 methods
 
@@ -162,6 +167,8 @@ gossa 中 T 兼容 fmt.Stringer 接口，正确输出。
 
   github.com/goplus/gossa/pkg/...
 
+.link https://github.com/goplus/gossa/tree/main/pkg
+
 * gossa 命令程序，测试用
 
   github.com/goplus/gossa/cmd/gossa
@@ -202,7 +209,7 @@ import (
 
 ## gossa demo3
 
-* 运行 interface 版本 Hello World ( 实现 Go runtime 兼容)
+* 运行 interface 版本 Hello World ( 实现 Go runtime 内存布局兼容)
 
 .play -edit gossa_demo/hello_interface/main.go
 
@@ -212,7 +219,7 @@ type Stringer interface { String() string }
 
 ## gossa demo4
 
-* 实现 Go runtime 兼容, main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。
+* main.go 源码与外部包 fmt.Stringer/fmt.GoStringer 兼容。
 
 .play -edit gossa_demo/hello_interface2/main.go
 
@@ -242,9 +249,14 @@ type Stringer interface { String() string }
 
 ## github.com/goplus/gossa 底层控制
 
-* gossa.Context 环境控制
+* gossa.Context 上下文/环境控制
 
-* gossa.Interp 执行引擎 
+  LoadFile/LoadAst/RunPkg/TestPkg/NewInterp 。。。
+
+* gossa.Interp 执行引擎
+
+  Run/RunFunc/GetFunc 。。。
+
 
 ## gossa demo9
 
@@ -318,47 +330,156 @@ type Stringer interface { String() string }
 
 .play -edit gossa_demo/ctx_get_type/main.go
 
-## gossa 实践
+## gossa 实战
 
-* 写一个 ispx 程序运行 github.com/goplus/spx 应用
+* 写一个 ispx 程序运行 github.com/goplus/spx 应用 ( Go+ class file )
+
+* ispx 项目地址
+
+.link https://github.com/goplus/ispx
+
+* ispx 项目使用
+
+安装 ispx
+```
+$ go get github.com/goplus/ispx
+```
+
+下载 FlappyCalf
+```
+$ git clone https://github.com/goplus/FlappyCalf
+```
+
+运行方式 1
+```
+$ ispx FlappyCalf
+```
+运行方式 2
+```
+$ cd FlappyCalf
+$ ispx .
+```
+
+## ispx 的实现代码
 
 .code -numbers ispx/main.go
 
-.link https://github.com/visualfc/ispx
+
+## ispx 依赖包
+
+$ ispx -dumppkg .
+
+.code -numbers ispx/dumppkg.txt
+
+## ispx 的 spx 导入包
+
+* 使用 qexp 生成导入包  `$ qexp -outdir pkg github.com/goplus/spx`
+
+.code -numbers ispx/pkg/github.com/goplus/spx/export.go
+
+## ispx 的 methods 设置
+
+
+* 如果注释掉 import _ "github.com/goplus/reflectx/icall/icall8192"
+在 ispx 运行时会出现失败，显示类似下面的代码，表示预分配 methods 不够。
+<p>
+cannot alloc method 3522 > 256, import _ "github.com/goplus/reflectx/icall/icall[2^n]"
+<p>
+fatal error: runtime: text offset base pointer out of ranges
+<p>
+
+* 1. 我们可以使用 reflectx 预置的分配表
+<p>
+github.com/goplus/reflectx/icall/icall[2^n]
+1024 2048 4096 。。。65536
+
+* 2. 使用 icall_gen 程序自动生成
+
+`$ go get github.com/goplus/reflectx/cmd/icall_gen`
+
+示例：生成 20000 个预分配表
+
+`//go:generate icall_gen -o icall.go -pkg main -size 20000`
 
 
 ## gossa 实现原理
 
-
-* Golang SSA package
+* golang.org/x/tools/go/ssa 实现 types.Package -> ssa.Package 转换
 
 Package ssa defines a representation of the elements of Go programs (packages, types, functions, variables and constants) using a static single-assignment (SSA) form intermediate representation (IR) for the bodies of functions.
 
 .link https://pkg.go.dev/golang.org/x/tools/go/ssa
 
-* reflectx package ( Go runtime 兼容)
+* reflectx package ( Go runtime 内存布局兼容)
 
 .link https://github.com/goplus/reflectx
 
-* reflectx package for GopherJS
-
 .link https://github.com/goplusjs/reflectx
 
-## gossa 存在问题
 
-* Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。
+## gossa 执行流程
+
+1. 预注册导入包 imports -> reflect package -> register pkg
+
+    import _ "github.com/goplus/gossa/pkg/fmt"
+
+2. Go+ Source -> Go Source 
+
+    import _ "github.com/goplus/gopbuild"
+
+3. Go Source -> ast.Package
+
+5. ast.Package -> types.Package
+
+    查找和安装导入包 reflect package -> types.Package
+
+    直接依赖包/间接依赖包 ( qexp 生成的导入包 )
+
+6. types.Package -> ssa.Program / ssa.Package
+
+7. gossa.Interp 加载 ssa.Program / ssa.Package
+
+## gossa.Interp 执行
+
+* 类型转换
+
+  ssa.Type -> reflect.Type
+
+  ssa.Value -> gossa.value/interface{}
+
+* 指令执行
+
+  ssa.Instruction
+
+  Function / Block / Var / BinOp 。。。
+
+* Go runtime 内存布局兼容 methods
+
+  reflectx    NamedTypeOf / InterfaceOf / SetMethodSet 。。。
+
+
+## gossa 改进空间，已知问题和解决方案
+
+* typed methods 数量限制，预分配 256 个。
+
+  import _ "github.com/reflectx/icall/icall[2^n]"
+
+  使用 reflectx/cmd/icall_gen 生成需要的 methods
+
+* 多源码包加载
+
+  需要 gossa 自行实现 go module 加载机制。
+
+* Go1.17 引入的 regabi 寄存器调用规范
+
+  Go1.17 amd64 需要设置 GOEXPERIMENT=noregabi 编译。
 
   GOEXPERIMENT=noregabi go build demo
 
 * Go1.18 amd64 默认使用 regabi 目前无法运行。
 
-  使用 ASM 编写 regabi 兼容 method provider
+  reflectx 需要使用 ASM 编写 regabi 兼容 method provider
 
-* typed methods 数量限制，预分配 256 个。
-
-  import _ "github.com/reflectx/icall/icall10" // 2^n (10~16)
-
-  使用 reflectx/cmd/icall_gen 生成需要的 methods
 
 ## Go+ Playground
 
@@ -399,3 +520,14 @@ replace github.com/goplus/reflectx => github.com/goplusjs/reflectx v0.5.6
 .link https://github.com/goplus/reflectx
 .link https://github.com/goplusjs/reflectx
 .link https://github.com/goplusjs/gopherjs
+
+
+## 练习
+
+* 参考 <https://github.com/visualfc/gossa_demo> 示例编写和测试程序。
+
+* 使用 WASM 在浏览器中通过 gossa 运行 Go/ Go+ 源码。
+
+* 参考 <https://github.com/goplus/ispx> 使用 qexp 生成自己需要的导入库来做一些脚本应用实现。
+
+* <https://github.com/goplus/reflectx> 的 regabi asm 实现。

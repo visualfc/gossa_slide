@@ -15,9 +15,9 @@ import (
 
 	_ "github.com/goplus/gossa/pkg/fmt"
 	_ "github.com/goplus/gossa/pkg/math"
-	_ "github.com/visualfc/ispx/pkg/github.com/goplus/spx"
+	_ "github.com/goplus/ispx/pkg/github.com/goplus/spx"
 
-	_ "github.com/goplus/reflectx/icall/icall11"
+	_ "github.com/goplus/reflectx/icall/icall8192"
 )
 
 var (
