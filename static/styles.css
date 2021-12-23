@@ -43,13 +43,13 @@ body {
   overflow: hidden;
 
   width: 900px;
-  height: 700px;
+  height: 740px;
 
   left: 50%;
   top: 50%;
 
   margin-left: -450px;
-  margin-top: -350px;
+  margin-top: -370px;
 
   padding: 40px 60px;
 
@@ -97,13 +97,13 @@ body {
   left: 0;
   top: 0;
   width: 150px;
-  height: 700px;
+  height: 740px;
 
   left: 50%;
   top: 50%;
 
   cursor: pointer;
-  margin-top: -350px;
+  margin-top: -370px;
 
   tap-highlight-color: transparent;
   -o-tap-highlight-color: transparent;
